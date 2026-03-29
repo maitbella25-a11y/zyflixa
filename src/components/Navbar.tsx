@@ -61,7 +61,7 @@ export const Navbar: React.FC = () => {
               className="text-[#E50914] font-black text-2xl tracking-tight"
               style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.05em' }}
             >
-              CINESTREAM
+              Zyflixa
             </span>
           </Link>
 
