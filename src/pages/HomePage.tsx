@@ -219,13 +219,13 @@ export const HomePage: React.FC = () => {
             className="text-[#E50914] font-black text-xl"
             style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.05em' }}
           >
-            CINESTREAM
+            Zyflixa
           </span>
           <p className="text-zinc-600 text-xs text-center">
-            Powered by TMDB. All movie/TV data courtesy of The Movie Database.
+            Powered by Zyflixa.
           </p>
           <div className="flex gap-4 text-xs text-zinc-600">
-            <span>© 2025 CineStream Pro</span>
+            <span>© 2026 Zyflixa</span>
           </div>
         </div>
       </footer>
