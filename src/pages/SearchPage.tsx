@@ -135,8 +135,8 @@ export const SearchPage: React.FC = () => {
       {query.length <= 1 && (
         <div className="text-center py-24">
           <Search className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-zinc-400 mb-2">Search CineStream</h2>
-          <p className="text-zinc-600">Find movies, TV shows, and more</p>
+          <h2 className="text-xl font-semibold text-zinc-400 mb-2">Search Zyflixa</h2>
+          <p className="text-zinc-600">Discover movies and TV shows on Zyflixa</p>
         </div>
       )}
     </div>
