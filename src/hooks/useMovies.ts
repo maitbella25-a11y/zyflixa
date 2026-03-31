@@ -147,6 +147,17 @@ export const useTrendingMovies = () =>
 export const useTrendingTV = () =>
   useQuery({ queryKey: ['trending-tv-day'], queryFn: api.getTrendingTV, staleTime: 5 * 60 * 1000 })
 
+// ─── Anime (Jikan) ────────────────────────────────────────────────────────────
+
+export const useTopAnime = () =>
+  useQuery({ queryKey: ['top-anime'], queryFn: api.getTopAnime, staleTime: 15 * 60 * 1000 })
+
+export const useSeasonalAnime = () =>
+  useQuery({ queryKey: ['seasonal-anime'], queryFn: api.getSeasonalAnime, staleTime: 15 * 60 * 1000 })
+
+export const useTrendingAnime = () =>
+  useQuery({ queryKey: ['trending-anime'], queryFn: api.getTrendingAnime, staleTime: 10 * 60 * 1000 })
+
 // ─── Search ──────────────────────────────────────────────────────────────────
 
 export const useSearch = (query: string, page: number = 1) =>

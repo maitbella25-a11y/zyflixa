@@ -18,21 +18,22 @@ import {
   useSciFiMovies,
   useThrillerMovies,
   useAnimationMovies,
-  useDocumentaryMovies,
   useTopRatedTV,
   useAiringTodayTV,
-  useOnTheAirTV,
   useActionTV,
-  useComedyTV,
   useCrimeTV,
-  useDocumentaryTV,
   useTrendingMovies,
   useTrendingTV,
+  useTopAnime,
+  useSeasonalAnime,
+  useTrendingAnime,
 } from '../hooks/useMovies'
 import { getAllProgress } from '../hooks/useWatchProgress'
 import { getImageUrl } from '../lib/tmdb'
+import type { Movie } from '../lib/tmdb'
+import type { AnimeEntry } from '../lib/api'
 
-// Continue watching mini-row
+// ─── Continue Watching ────────────────────────────────────────────────────────
 const ContinueWatching: React.FC = () => {
   const progressItems = getAllProgress().slice(0, 10)
   if (progressItems.length === 0) return null
@@ -45,10 +46,7 @@ const ContinueWatching: React.FC = () => {
       </div>
       <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 sm:px-8 lg:px-16 pb-2">
         {progressItems.map((item) => {
-          const pct =
-            item.duration > 0
-              ? Math.min((item.currentTime / item.duration) * 100, 100)
-              : 0
+          const pct = item.duration > 0 ? Math.min((item.currentTime / item.duration) * 100, 100) : 0
           return (
             <Link
               key={item.id}
@@ -56,7 +54,7 @@ const ContinueWatching: React.FC = () => {
               params={{ mediaType: item.mediaType, id: String(item.id) }}
               className="flex-shrink-0 w-[200px] sm:w-[240px] group"
             >
-              <div className="relative aspect-video rounded-md overflow-hidden bg-zinc-800 mb-2">
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-zinc-800 mb-2">
                 {item.posterPath && (
                   <img
                     src={getImageUrl(item.posterPath, 'w342')}
@@ -66,15 +64,12 @@ const ContinueWatching: React.FC = () => {
                   />
                 )}
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-lg">
                     <Play className="w-4 h-4 text-black fill-black ml-0.5" />
                   </div>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-700">
-                  <div
-                    className="h-full bg-[#E50914] transition-all"
-                    style={{ width: `${pct}%` }}
-                  />
+                  <div className="h-full bg-[#E50914] transition-all" style={{ width: `${pct}%` }} />
                 </div>
               </div>
               <p className="text-sm text-zinc-300 line-clamp-1 group-hover:text-white transition-colors">
@@ -89,15 +84,16 @@ const ContinueWatching: React.FC = () => {
   )
 }
 
-// Section divider with label
-const SectionLabel: React.FC<{ label: string }> = ({ label }) => (
-  <div className="flex items-center gap-3 px-4 sm:px-8 lg:px-16 py-2 mb-1">
-    <div className="w-1 h-5 bg-[#E50914] rounded-full" />
-    <span className="text-zinc-500 text-xs uppercase tracking-widest font-semibold">{label}</span>
-    <div className="flex-1 h-px bg-zinc-800" />
+// ─── Section Divider ─────────────────────────────────────────────────────────
+const SectionLabel: React.FC<{ label: string; color?: string }> = ({ label, color = '#E50914' }) => (
+  <div className="flex items-center gap-3 px-4 sm:px-8 lg:px-16 pt-6 pb-1">
+    <div className="w-1 h-5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+    <span className="text-zinc-500 text-[11px] uppercase tracking-widest font-bold">{label}</span>
+    <div className="flex-1 h-px bg-zinc-800/60" />
   </div>
 )
 
+// ─── HomePage ─────────────────────────────────────────────────────────────────
 export const HomePage: React.FC = () => {
   const { data: trending = [], isLoading: trendingLoading } = useTrending('all', 'week')
   const { data: popularMovies = [], isLoading: popularMoviesLoading } = usePopularMovies()
@@ -106,30 +102,31 @@ export const HomePage: React.FC = () => {
   const { data: nowPlaying = [], isLoading: nowPlayingLoading } = useNowPlaying()
   const { data: upcoming = [] } = useUpcomingMovies()
 
-  // Genre-based movie rows
+  // Movies by genre
   const { data: actionMovies = [] } = useActionMovies()
   const { data: comedyMovies = [] } = useComedyMovies()
   const { data: horrorMovies = [] } = useHorrorMovies()
   const { data: sciFiMovies = [] } = useSciFiMovies()
   const { data: thrillerMovies = [] } = useThrillerMovies()
   const { data: animationMovies = [] } = useAnimationMovies()
-  const { data: documentaryMovies = [] } = useDocumentaryMovies()
 
-  // TV Show rows
+  // TV Shows
   const { data: topRatedTV = [] } = useTopRatedTV()
   const { data: airingTodayTV = [] } = useAiringTodayTV()
-  const { data: onTheAirTV = [] } = useOnTheAirTV()
   const { data: actionTV = [] } = useActionTV()
-  const { data: comedyTV = [] } = useComedyTV()
   const { data: crimeTV = [] } = useCrimeTV()
-  const { data: documentaryTV = [] } = useDocumentaryTV()
   const { data: dramaTV = [] } = useTVByGenre(18)
-  const { data: animationTV = [] } = useTVByGenre(16)
   const { data: mysteryTV = [] } = useTVByGenre(9648)
+  const { data: animationTV = [] } = useTVByGenre(16)
 
   // Trending by type
   const { data: trendingMovies = [] } = useTrendingMovies()
   const { data: trendingTV = [] } = useTrendingTV()
+
+  // Anime (Jikan)
+  const { data: topAnime = [], isLoading: animeLoading } = useTopAnime()
+  const { data: seasonalAnime = [] } = useSeasonalAnime()
+  const { data: trendingAnime = [] } = useTrendingAnime()
 
   return (
     <main className="min-h-screen bg-[#141414]">
@@ -139,47 +136,21 @@ export const HomePage: React.FC = () => {
         isLoading={trendingLoading}
       />
 
-      {/* Content below hero */}
-      <div className="relative z-10 -mt-16">
+      {/* Main content — negative margin overlaps hero bottom gradient */}
+      <div className="relative z-10 -mt-16 pb-16">
         <ContinueWatching />
 
         {/* ── TRENDING ── */}
         <SectionLabel label="Trending" />
-        <MovieRow
-          title="Trending This Week"
-          movies={trending}
-          isLoading={trendingLoading}
-          subtitle="All"
-        />
-        <MovieRow
-          title="Trending Movies Today"
-          movies={trendingMovies}
-          subtitle="Movies"
-        />
-        <MovieRow
-          title="Trending TV Shows Today"
-          movies={trendingTV}
-          subtitle="TV"
-        />
+        <MovieRow title="Trending This Week" movies={trending} isLoading={trendingLoading} subtitle="All" />
+        <MovieRow title="Trending Movies Today" movies={trendingMovies} subtitle="Movies" />
+        <MovieRow title="Trending TV Today" movies={trendingTV} subtitle="TV" />
 
         {/* ── MOVIES ── */}
         <SectionLabel label="Movies" />
-        <MovieRow
-          title="Now Playing in Theaters"
-          movies={nowPlaying}
-          isLoading={nowPlayingLoading}
-        />
-        <MovieRow
-          title="Popular Movies"
-          movies={popularMovies}
-          isLoading={popularMoviesLoading}
-        />
-        <MovieRow
-          title="Top Rated Movies"
-          movies={topRated}
-          isLoading={topRatedLoading}
-          subtitle="All Time"
-        />
+        <MovieRow title="Now Playing" movies={nowPlaying} isLoading={nowPlayingLoading} />
+        <MovieRow title="Popular Movies" movies={popularMovies} isLoading={popularMoviesLoading} />
+        <MovieRow title="Top Rated Movies" movies={topRated} isLoading={topRatedLoading} subtitle="All Time" />
         <MovieRow title="Coming Soon" movies={upcoming} subtitle="Upcoming" />
         <MovieRow title="Action & Adventure" movies={actionMovies} />
         <MovieRow title="Comedy" movies={comedyMovies} />
@@ -187,25 +158,36 @@ export const HomePage: React.FC = () => {
         <MovieRow title="Thrillers" movies={thrillerMovies} />
         <MovieRow title="Horror" movies={horrorMovies} />
         <MovieRow title="Animation Films" movies={animationMovies} />
-        <MovieRow title="Documentaries" movies={documentaryMovies} />
 
         {/* ── TV SHOWS ── */}
         <SectionLabel label="TV Shows" />
-        <MovieRow
-          title="Popular TV Shows"
-          movies={popularTV}
-          isLoading={popularTVLoading}
-        />
+        <MovieRow title="Popular TV Shows" movies={popularTV} isLoading={popularTVLoading} />
         <MovieRow title="Top Rated Series" movies={topRatedTV} subtitle="All Time" />
-        <MovieRow title="Airing Today" movies={airingTodayTV} subtitle="Live" />
-        <MovieRow title="Currently On Air" movies={onTheAirTV} />
+        <MovieRow title="Airing Today" movies={airingTodayTV} />
         <MovieRow title="Drama Series" movies={dramaTV} />
         <MovieRow title="Action & Adventure Shows" movies={actionTV} />
-        <MovieRow title="Crime & Mystery" movies={crimeTV} />
-        <MovieRow title="Comedy Shows" movies={comedyTV} />
-        <MovieRow title="Mystery & Suspense" movies={mysteryTV} />
+        <MovieRow title="Crime & Thriller" movies={crimeTV} />
+        <MovieRow title="Mystery" movies={mysteryTV} />
         <MovieRow title="Animation Series" movies={animationTV} />
-        <MovieRow title="Documentary Series" movies={documentaryTV} />
+
+        {/* ── ANIME ── */}
+        <SectionLabel label="Anime" color="#7c3aed" />
+        <MovieRow
+          title="Top Anime"
+          movies={topAnime as unknown as Movie[]}
+          isLoading={animeLoading}
+          subtitle="All Time"
+        />
+        <MovieRow
+          title="Trending Anime"
+          movies={trendingAnime as unknown as Movie[]}
+          subtitle="Airing"
+        />
+        <MovieRow
+          title="This Season"
+          movies={seasonalAnime as unknown as Movie[]}
+          subtitle="Seasonal"
+        />
 
         {/* ── BROWSE BY GENRE ── */}
         <SectionLabel label="Browse by Genre" />
@@ -213,20 +195,18 @@ export const HomePage: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <footer className="py-12 px-4 sm:px-8 lg:px-16 mt-8 border-t border-zinc-800/60">
+      <footer className="py-10 px-4 sm:px-8 lg:px-16 border-t border-zinc-800/60">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <span
             className="text-[#E50914] font-black text-xl"
             style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.05em' }}
           >
-            Zyflixa
+            CINESTREAM
           </span>
           <p className="text-zinc-600 text-xs text-center">
-            Powered by Zyflixa.
+            Movie/TV data by TMDB · Anime data by Jikan (MyAnimeList)
           </p>
-          <div className="flex gap-4 text-xs text-zinc-600">
-            <span>© 2026 Zyflixa</span>
-          </div>
+          <span className="text-zinc-600 text-xs">© 2025 CineStream Pro</span>
         </div>
       </footer>
     </main>

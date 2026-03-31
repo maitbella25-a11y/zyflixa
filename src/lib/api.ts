@@ -1,5 +1,30 @@
 import { TMDB_CONFIG, Movie, MovieDetails, TVDetails, SearchResults, Genre } from './tmdb'
 
+// ─── Jikan (Anime) Types ─────────────────────────────────────────────────────
+
+export interface AnimeEntry {
+  mal_id: number
+  title: string
+  title_english?: string
+  images: { jpg: { image_url: string; large_image_url?: string } }
+  synopsis?: string
+  score?: number
+  year?: number
+  genres?: { name: string }[]
+  type?: string
+  episodes?: number
+  status?: string
+  // normalized fields for MovieCard compatibility
+  id?: number
+  poster_path?: string
+  backdrop_path?: string
+  overview?: string
+  vote_average?: number
+  media_type?: string
+  name?: string
+  release_date?: string
+}
+
 // ─── Core Fetcher ────────────────────────────────────────────────────────────
 
 const fetcher = async <T>(endpoint: string, params: Record<string, string> = {}): Promise<T> => {
@@ -342,5 +367,65 @@ export const getPersonDetails = async (id: number): Promise<Record<string, unkno
     return data
   } catch {
     return null
+  }
+}
+
+// ─── Jikan API (Anime) ────────────────────────────────────────────────────────
+
+const JIKAN_BASE = 'https://api.jikan.moe/v4'
+
+// Normalize Jikan anime entry into a Movie-compatible shape for MovieCard
+const normalizeAnime = (anime: AnimeEntry): AnimeEntry => ({
+  ...anime,
+  id: anime.mal_id,
+  name: anime.title_english || anime.title,
+  overview: anime.synopsis || '',
+  vote_average: anime.score || 0,
+  media_type: 'anime',
+  poster_path: anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || '',
+  release_date: anime.year ? String(anime.year) : '',
+})
+
+export const getTopAnime = async (): Promise<AnimeEntry[]> => {
+  try {
+    const res = await fetch(`${JIKAN_BASE}/top/anime?limit=20`)
+    if (!res.ok) return []
+    const data = await res.json() as { data: AnimeEntry[] }
+    return (data.data || []).map(normalizeAnime)
+  } catch {
+    return []
+  }
+}
+
+export const getSeasonalAnime = async (): Promise<AnimeEntry[]> => {
+  try {
+    const res = await fetch(`${JIKAN_BASE}/seasons/now?limit=20`)
+    if (!res.ok) return []
+    const data = await res.json() as { data: AnimeEntry[] }
+    return (data.data || []).map(normalizeAnime)
+  } catch {
+    return []
+  }
+}
+
+export const getTrendingAnime = async (): Promise<AnimeEntry[]> => {
+  try {
+    const res = await fetch(`${JIKAN_BASE}/top/anime?filter=airing&limit=20`)
+    if (!res.ok) return []
+    const data = await res.json() as { data: AnimeEntry[] }
+    return (data.data || []).map(normalizeAnime)
+  } catch {
+    return []
+  }
+}
+
+export const searchAnime = async (query: string): Promise<AnimeEntry[]> => {
+  try {
+    const res = await fetch(`${JIKAN_BASE}/anime?q=${encodeURIComponent(query)}&limit=10&sfw=true`)
+    if (!res.ok) return []
+    const data = await res.json() as { data: AnimeEntry[] }
+    return (data.data || []).map(normalizeAnime)
+  } catch {
+    return []
   }
 }
