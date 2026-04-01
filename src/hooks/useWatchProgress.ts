@@ -15,7 +15,7 @@ export interface WatchProgress {
 // ─── Key Helpers ─────────────────────────────────────────────────────────────
 
 export const getProgressKey = (mediaType: 'movie' | 'tv', id: number): string =>
-  `cinestream_progress_${mediaType}_${id}`
+  `zyflixa_progress_${mediaType}_${id}`
 
 // ─── Core Storage Functions ──────────────────────────────────────────────────
 
@@ -50,7 +50,7 @@ export const getAllProgress = (): WatchProgress[] => {
     const items: WatchProgress[] = []
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i)
-      if (key?.startsWith('cinestream_progress_')) {
+      if (key?.startsWith('zyflixa_progress_')) {
         const data = getProgress(key)
         if (data) items.push(data)
       }
@@ -67,7 +67,7 @@ export const clearAllProgress = (): void => {
     const keysToRemove: string[] = []
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i)
-      if (key?.startsWith('cinestream_progress_')) {
+      if (key?.startsWith('zyflixa_progress_')) {
         keysToRemove.push(key)
       }
     }

@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
-import { Play, Star, Clock, Calendar, Plus, ChevronLeft, ExternalLink, Server } from 'lucide-react'
+import { Play, Star, Clock, Calendar, Plus, Check, ChevronLeft, ExternalLink, Server } from 'lucide-react'
 import { useMovieDetails, useTVDetails } from '../hooks/useMovies'
 import { getImageUrl, getBackdropUrl } from '../lib/tmdb'
 import { Spinner } from '../components/ui/Spinner'
 import { MovieRow } from '../components/MovieRow'
+import { useWatchlist } from '../hooks/useWatchlist'
 import type { MovieDetails, TVDetails, Cast, Video } from '../lib/tmdb'
 
 type DetailsData = MovieDetails | TVDetails
@@ -37,6 +38,7 @@ export const DetailsPage: React.FC = () => {
   const id = parseInt(params.id, 10)
 
   const [trailerOpen, setTrailerOpen] = useState(false)
+  const { isInWatchlist, toggleWatchlist } = useWatchlist()
 
   const { data: movieData, isLoading: movieLoading } = useMovieDetails(
     mediaType === 'movie' ? id : 0,
@@ -209,9 +211,22 @@ export const DetailsPage: React.FC = () => {
                 <Server className="w-4 h-4" />
                 Choose Server
               </Link>
-              <button className="flex items-center gap-2 bg-zinc-800/60 text-zinc-300 font-semibold px-4 py-3 rounded-lg hover:bg-zinc-700 active:scale-95 transition-all text-sm border border-zinc-700">
-                <Plus className="w-4 h-4" />
-                My List
+              <button
+                onClick={() => toggleWatchlist({
+                  id,
+                  title,
+                  posterPath: details.poster_path,
+                  mediaType: mediaType as 'movie' | 'tv',
+                  voteAverage: details.vote_average || 0,
+                })}
+                className={`flex items-center gap-2 font-semibold px-4 py-3 rounded-lg active:scale-95 transition-all text-sm border ${
+                  isInWatchlist(id)
+                    ? 'bg-[#E50914]/20 text-[#E50914] border-[#E50914]/50 hover:bg-[#E50914]/30'
+                    : 'bg-zinc-800/60 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
+                }`}
+              >
+                {isInWatchlist(id) ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                {isInWatchlist(id) ? 'In My List' : 'My List'}
               </button>
             </div>
           </div>
