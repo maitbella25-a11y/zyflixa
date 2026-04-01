@@ -201,12 +201,12 @@ export const HomePage: React.FC = () => {
             className="text-[#E50914] font-black text-xl"
             style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.05em' }}
           >
-            CINESTREAM
+            ZYFLIXA
           </span>
           <p className="text-zinc-600 text-xs text-center">
             Movie/TV data by TMDB · Anime data by Jikan (MyAnimeList)
           </p>
-          <span className="text-zinc-600 text-xs">© 2025 CineStream Pro</span>
+          <span className="text-zinc-600 text-xs">© 2025 Zyflixa</span>
         </div>
       </footer>
     </main>

@@ -32,9 +32,42 @@ export const BrowsePage: React.FC = () => {
   const topRatedResult = useTopRatedMovies()
   const nowPlayingResult = useNowPlaying()
 
-  const configs: Record<string, { data: Movie[]; isLoading: boolean }> = {
-    movies: { data: moviesResult.data || [], isLoading: moviesResult.isLoading },
-    tv: { data: tvResult.data || [], isLoading: tvResult.isLoading },
+  // Accumulate pages for paginated endpoints
+  const [accumulatedMovies, setAccumulatedMovies] = useState<Movie[]>([])
+  const [accumulatedTV, setAccumulatedTV] = useState<Movie[]>([])
+
+  // Update accumulated data when new pages load
+  React.useEffect(() => {
+    if (moviesResult.data && moviesResult.data.length > 0) {
+      if (page === 1) {
+        setAccumulatedMovies(moviesResult.data)
+      } else {
+        setAccumulatedMovies((prev) => {
+          const ids = new Set(prev.map((m) => m.id))
+          const newItems = moviesResult.data!.filter((m) => !ids.has(m.id))
+          return [...prev, ...newItems]
+        })
+      }
+    }
+  }, [moviesResult.data, page])
+
+  React.useEffect(() => {
+    if (tvResult.data && tvResult.data.length > 0) {
+      if (page === 1) {
+        setAccumulatedTV(tvResult.data)
+      } else {
+        setAccumulatedTV((prev) => {
+          const ids = new Set(prev.map((m) => m.id))
+          const newItems = tvResult.data!.filter((m) => !ids.has(m.id))
+          return [...prev, ...newItems]
+        })
+      }
+    }
+  }, [tvResult.data, page])
+
+  const configs: Record<string, { data: Movie[]; isLoading: boolean; isFetching?: boolean }> = {
+    movies: { data: accumulatedMovies, isLoading: moviesResult.isLoading, isFetching: moviesResult.isFetching },
+    tv: { data: accumulatedTV, isLoading: tvResult.isLoading, isFetching: tvResult.isFetching },
     trending: { data: trendingResult.data || [], isLoading: trendingResult.isLoading },
     'top-rated': { data: topRatedResult.data || [], isLoading: topRatedResult.isLoading },
     'now-playing': { data: nowPlayingResult.data || [], isLoading: nowPlayingResult.isLoading },
@@ -42,9 +75,13 @@ export const BrowsePage: React.FC = () => {
 
   const config = configs[category] ?? configs['trending']
   const info = categoryConfig[category] ?? categoryConfig['trending']
-  const { data, isLoading } = config
+  const { data, isLoading, isFetching } = config
 
   const supportsLoadMore = category === 'movies' || category === 'tv'
+
+  const handleLoadMore = () => {
+    setPage((p) => p + 1)
+  }
 
   return (
     <div className="min-h-screen bg-[#141414] pb-16">
@@ -57,10 +94,7 @@ export const BrowsePage: React.FC = () => {
           <ChevronLeft className="w-4 h-4" />
           Back to Home
         </Link>
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
           <div className="flex items-center gap-3 mb-1">
             <span className="text-3xl">{info.emoji}</span>
             <h1
@@ -79,7 +113,7 @@ export const BrowsePage: React.FC = () => {
 
       {/* Grid */}
       <div className="px-4 sm:px-8 lg:px-16 pt-8">
-        {isLoading ? (
+        {isLoading && data.length === 0 ? (
           <div className="flex items-center justify-center py-24">
             <Spinner size="lg" />
           </div>
@@ -96,14 +130,22 @@ export const BrowsePage: React.FC = () => {
               ))}
             </motion.div>
 
-            {/* Load More — only for paginated endpoints */}
+            {/* Load More */}
             {supportsLoadMore && (
               <div className="flex justify-center mt-10">
                 <button
-                  onClick={() => setPage((p) => p + 1)}
-                  className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium rounded-md transition-all duration-200 border border-zinc-700 hover:border-zinc-500"
+                  onClick={handleLoadMore}
+                  disabled={isFetching}
+                  className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium rounded-md transition-all duration-200 border border-zinc-700 hover:border-zinc-500 disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Load More
+                  {isFetching ? (
+                    <>
+                      <Spinner size="sm" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Load More'
+                  )}
                 </button>
               </div>
             )}
