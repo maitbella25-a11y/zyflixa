@@ -55,7 +55,7 @@ export const Navbar: React.FC = () => {
     { label: 'Home', to: '/' },
     { label: 'Movies', to: '/browse/movies' },
     { label: 'TV Shows', to: '/browse/tv' },
-    { label: 'New & Popular', to: '/browse/trending' },
+    { label: 'Anime', to: '/browse/anime' },
   ]
 
   return (

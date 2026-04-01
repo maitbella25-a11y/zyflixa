@@ -8,10 +8,14 @@ import {
   useTrending,
   useTopRatedMovies,
   useNowPlaying,
+  useTopAnime,
+  useTrendingAnime,
+  useSeasonalAnime,
 } from '../hooks/useMovies'
 import { MovieCard } from '../components/MovieCard'
 import { Spinner } from '../components/ui/Spinner'
 import type { Movie } from '../lib/tmdb'
+import type { AnimeEntry } from '../lib/api'
 
 const categoryConfig: Record<string, { title: string; subtitle: string; emoji: string }> = {
   movies: { title: 'Popular Movies', subtitle: 'The most popular movies right now', emoji: '🎬' },
@@ -19,7 +23,24 @@ const categoryConfig: Record<string, { title: string; subtitle: string; emoji: s
   trending: { title: 'Trending Now', subtitle: 'What everyone is watching this week', emoji: '🔥' },
   'top-rated': { title: 'Top Rated', subtitle: 'The highest rated of all time', emoji: '⭐' },
   'now-playing': { title: 'Now Playing', subtitle: 'Currently in theaters', emoji: '🎭' },
+  anime: { title: 'Anime', subtitle: 'Top anime series & movies', emoji: '🎌' },
 }
+
+// Normalize AnimeEntry to be compatible with MovieCard (which expects Movie shape)
+const animeToMovie = (a: AnimeEntry): Movie => ({
+  id: a.mal_id,
+  title: a.title_english || a.title,
+  name: a.title_english || a.title,
+  overview: a.synopsis || '',
+  poster_path: a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || null,
+  backdrop_path: null,
+  vote_average: a.score || 0,
+  vote_count: 0,
+  genre_ids: [],
+  media_type: 'anime',
+  popularity: 0,
+  adult: false,
+})
 
 export const BrowsePage: React.FC = () => {
   const params = useParams({ from: '/browse/$category' })
@@ -31,12 +52,14 @@ export const BrowsePage: React.FC = () => {
   const trendingResult = useTrending('all', 'week')
   const topRatedResult = useTopRatedMovies()
   const nowPlayingResult = useNowPlaying()
+  const topAnimeResult = useTopAnime()
+  const trendingAnimeResult = useTrendingAnime()
+  const seasonalAnimeResult = useSeasonalAnime()
 
   // Accumulate pages for paginated endpoints
   const [accumulatedMovies, setAccumulatedMovies] = useState<Movie[]>([])
   const [accumulatedTV, setAccumulatedTV] = useState<Movie[]>([])
 
-  // Update accumulated data when new pages load
   React.useEffect(() => {
     if (moviesResult.data && moviesResult.data.length > 0) {
       if (page === 1) {
@@ -65,12 +88,28 @@ export const BrowsePage: React.FC = () => {
     }
   }, [tvResult.data, page])
 
+  // Merge all anime sources and deduplicate
+  const animeData: Movie[] = React.useMemo(() => {
+    const all = [
+      ...(topAnimeResult.data || []),
+      ...(trendingAnimeResult.data || []),
+      ...(seasonalAnimeResult.data || []),
+    ]
+    const seen = new Set<number>()
+    return all
+      .filter((a) => { if (seen.has(a.mal_id)) return false; seen.add(a.mal_id); return true })
+      .map(animeToMovie)
+  }, [topAnimeResult.data, trendingAnimeResult.data, seasonalAnimeResult.data])
+
+  const animeLoading = topAnimeResult.isLoading && trendingAnimeResult.isLoading && seasonalAnimeResult.isLoading
+
   const configs: Record<string, { data: Movie[]; isLoading: boolean; isFetching?: boolean }> = {
     movies: { data: accumulatedMovies, isLoading: moviesResult.isLoading, isFetching: moviesResult.isFetching },
     tv: { data: accumulatedTV, isLoading: tvResult.isLoading, isFetching: tvResult.isFetching },
     trending: { data: trendingResult.data || [], isLoading: trendingResult.isLoading },
     'top-rated': { data: topRatedResult.data || [], isLoading: topRatedResult.isLoading },
     'now-playing': { data: nowPlayingResult.data || [], isLoading: nowPlayingResult.isLoading },
+    anime: { data: animeData, isLoading: animeLoading },
   }
 
   const config = configs[category] ?? configs['trending']
