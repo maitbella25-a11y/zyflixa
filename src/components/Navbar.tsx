@@ -1,75 +1,49 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Bell, User, Menu, X, Film, Tv, Star } from 'lucide-react'
+import { Search, Bell, User, Menu, X } from 'lucide-react'
 import { useSearch } from '../hooks/useMovies'
 import { getImageUrl } from '../lib/tmdb'
 import type { Movie } from '../lib/tmdb'
 
 const NAVBAR_HEIGHT = 64
 
-const SearchDropdown: React.FC<{
-query: string
-onClose: () => void
-onSelect: () => void
-}> = ({ query, onClose, onSelect }) => {
+const SearchDropdown = ({ query, onClose }: any) => {
 const { data, isLoading } = useSearch(query)
 
 const results = (data?.results || [])
-.filter((m: Movie) => m.media_type !== 'person' && (m.poster_path || m.backdrop_path))
-.slice(0, 8)
+.filter((m: Movie) => m.media_type !== 'person' && m.poster_path)
+.slice(0, 6)
 
 if (query.length < 2) return null
 
-return (
-<motion.div
-initial={{ opacity: 0, y: -6 }}
-animate={{ opacity: 1, y: 0 }}
-exit={{ opacity: 0, y: -6 }}
-className="absolute top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl z-50"
->
-{isLoading ? ( <div className="px-4 py-6 text-center text-zinc-500 text-sm">
-Searching... </div>
-) : results.length === 0 ? ( <div className="px-4 py-6 text-center text-zinc-500 text-sm">
-No results for "{query}" </div>
+return ( <div className="absolute top-full right-0 mt-2 w-64 bg-zinc-900 rounded shadow-lg z-50">
+{isLoading ? ( <p className="p-3 text-sm text-zinc-400">Searching...</p>
 ) : (
-<> <div className="max-h-[400px] overflow-y-auto">
-{results.map((movie) => {
-const title = movie.title || movie.name || ''
-return (
+results.map((movie) => (
 <Link
 key={movie.id}
 to="/details/$mediaType/$id"
 params={{ mediaType: movie.media_type || 'movie', id: String(movie.id) }}
-onClick={onSelect}
-className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800"
+onClick={onClose}
+className="flex items-center gap-2 p-2 hover:bg-zinc-800"
 >
 <img
 src={getImageUrl(movie.poster_path, 'w92')}
-className="w-10 h-14 object-cover rounded"
-/> <p className="text-white text-sm">{title}</p> </Link>
-)
-})} </div>
-</>
-)}
-</motion.div>
+className="w-8 h-12 object-cover"
+/> <span className="text-white text-sm">
+{movie.title || movie.name} </span> </Link>
+))
+)} </div>
 )
 }
 
-export const Navbar: React.FC = () => {
-const [isScrolled, setIsScrolled] = useState(false)
+export const Navbar = () => {
 const [showSearch, setShowSearch] = useState(false)
 const [searchQuery, setSearchQuery] = useState('')
 const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
 const searchRef = useRef<HTMLInputElement>(null)
-const searchContainerRef = useRef<HTMLDivElement>(null)
-
-useEffect(() => {
-const onScroll = () => setIsScrolled(window.scrollY > 20)
-window.addEventListener('scroll', onScroll)
-return () => window.removeEventListener('scroll', onScroll)
-}, [])
 
 useEffect(() => {
 if (showSearch) searchRef.current?.focus()
@@ -80,31 +54,27 @@ setShowSearch(false)
 setSearchQuery('')
 }, [])
 
-const navLinks = [
-{ label: 'Home', to: '/' },
-{ label: 'Movies', to: '/browse/movies' },
-{ label: 'TV Shows', to: '/browse/tv' },
-{ label: 'New & Popular', to: '/browse/trending' },
-]
-
 return (
 <> <nav className="fixed top-0 left-0 right-0 z-50 bg-[#141414]"> <div className="flex items-center justify-between px-4 sm:px-8 lg:px-16 h-16">
 
 ```
-      <Link to="/" className="text-[#E50914] font-black text-xl">
+      {/* Logo */}
+      <Link to="/" className="text-[#E50914] text-2xl font-bold">
         ZYFLIXA
       </Link>
 
-      <div className="hidden lg:flex gap-5">
-        {navLinks.map((link) => (
-          <Link key={link.to} to={link.to} className="text-zinc-300 hover:text-white">
-            {link.label}
-          </Link>
-        ))}
+      {/* Links */}
+      <div className="hidden lg:flex gap-6">
+        <Link to="/" className="text-zinc-300 hover:text-white">Home</Link>
+        <Link to="/browse/movies" className="text-zinc-300 hover:text-white">Movies</Link>
+        <Link to="/browse/tv" className="text-zinc-300 hover:text-white">TV Shows</Link>
       </div>
 
+      {/* Actions */}
       <div className="flex items-center gap-3">
-        <div ref={searchContainerRef} className="relative">
+
+        {/* Search */}
+        <div className="relative">
           <button onClick={() => setShowSearch(!showSearch)}>
             <Search className="w-5 h-5 text-white" />
           </button>
@@ -116,24 +86,27 @@ return (
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-transparent text-white outline-none"
+                placeholder="Search..."
               />
+
               <SearchDropdown
                 query={searchQuery}
                 onClose={closeSearch}
-                onSelect={closeSearch}
               />
             </div>
           )}
         </div>
 
+        {/* Icons */}
         <Bell className="w-5 h-5 text-white" />
         <User className="w-5 h-5 text-white" />
 
+        {/* Mobile */}
         <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X /> : <Menu />}
         </button>
-      </div>
 
+      </div>
     </div>
   </nav>
 
