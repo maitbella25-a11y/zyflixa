@@ -8,7 +8,6 @@ import {
   RefreshCw,
   AlertTriangle,
   Play,
-  Info,
 } from 'lucide-react'
 import { useMovieDetails, useTVDetails } from '../hooks/useMovies'
 import { Spinner } from '../components/ui/Spinner'
@@ -87,6 +86,9 @@ export const WatchPage: React.FC = () => {
 
   const title = (details as any)?.title || (details as any)?.name || 'Loading...'
   const totalSeasons = (details as any)?.number_of_seasons ?? 1
+  const totalEpisodes = (details as any)?.number_of_episodes ?? 50
+  // Estimate episodes per season (rough but avoids extra API call)
+  const episodesPerSeason = Math.max(13, Math.ceil(totalEpisodes / Math.max(totalSeasons, 1)))
 
   const currentSource = SOURCES.find((s) => s.id === sourceId) ?? SOURCES[0]
   const embedUrl = currentSource.getUrl(mediaType, id, season, episode)
@@ -206,7 +208,7 @@ export const WatchPage: React.FC = () => {
               }}
               className="bg-zinc-800 text-white text-xs border border-zinc-700 rounded px-2 py-1 focus:outline-none focus:border-[#E50914]"
             >
-              {Array.from({ length: 30 }, (_, i) => i + 1).map((ep) => (
+              {Array.from({ length: episodesPerSeason }, (_, i) => i + 1).map((ep) => (
                 <option key={ep} value={ep}>
                   E{String(ep).padStart(2, '0')}
                 </option>

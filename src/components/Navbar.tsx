@@ -8,12 +8,10 @@ export const Navbar: React.FC = () => {
   const [showSearch, setShowSearch] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isWatchPage, setIsWatchPage] = useState(
+    typeof window !== 'undefined' && window.location.pathname.startsWith('/watch/')
+  )
   const searchRef = useRef<HTMLInputElement>(null)
-
-  // Hide navbar on watch page
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/watch/')) {
-    return null
-  }
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 20)
@@ -25,6 +23,16 @@ export const Navbar: React.FC = () => {
     if (showSearch) searchRef.current?.focus()
   }, [showSearch])
 
+  useEffect(() => {
+    // Update on route changes
+    const checkRoute = () =>
+      setIsWatchPage(window.location.pathname.startsWith('/watch/'))
+    window.addEventListener('popstate', checkRoute)
+    return () => window.removeEventListener('popstate', checkRoute)
+  }, [])
+
+  // Hide navbar on watch page — after all hooks
+  if (isWatchPage) return null
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
