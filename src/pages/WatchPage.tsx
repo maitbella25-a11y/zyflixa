@@ -1,12 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft,
   Server,
   Monitor,
-  Maximize,
-  Minimize,
   RefreshCw,
   AlertTriangle,
   Play,
@@ -63,28 +61,6 @@ const SOURCES: EmbedSource[] = [
   },
 ]
 
-// ─── Lock Screen Orientation (mobile) ────────────────────────────────────────
-
-const lockLandscape = async () => {
-  try {
-    const orientation = (screen as any).orientation
-    if (orientation?.lock) {
-      await orientation.lock('landscape')
-    }
-  } catch {
-    // Not supported or denied — ignore
-  }
-}
-
-const unlockOrientation = () => {
-  try {
-    const orientation = (screen as any).orientation
-    if (orientation?.unlock) orientation.unlock()
-  } catch {
-    // ignore
-  }
-}
-
 // ─── WatchPage ────────────────────────────────────────────────────────────────
 
 export const WatchPage: React.FC = () => {
@@ -96,11 +72,9 @@ export const WatchPage: React.FC = () => {
   const [season, setSeason] = useState(1)
   const [episode, setEpisode] = useState(1)
   const [showSources, setShowSources] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const [iframeKey, setIframeKey] = useState(0) // force reload
+  const [iframeKey, setIframeKey] = useState(0)
   const [iframeLoaded, setIframeLoaded] = useState(false)
 
-  const containerRef = useRef<HTMLDivElement>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   const { data: movieData, isLoading: movieLoading } = useMovieDetails(
@@ -111,53 +85,13 @@ export const WatchPage: React.FC = () => {
   const details = mediaType === 'movie' ? movieData : tvData
   const isLoading = mediaType === 'movie' ? movieLoading : tvLoading
 
-  const title =
-    (details as any)?.title || (details as any)?.name || 'Loading...'
+  const title = (details as any)?.title || (details as any)?.name || 'Loading...'
   const totalSeasons = (details as any)?.number_of_seasons ?? 1
 
   const currentSource = SOURCES.find((s) => s.id === sourceId) ?? SOURCES[0]
   const embedUrl = currentSource.getUrl(mediaType, id, season, episode)
 
-  // ── Fullscreen handler ──────────────────────────────────────────────────────
-  const handleFullscreen = useCallback(async () => {
-    const el = containerRef.current
-    if (!el) return
-
-    if (!document.fullscreenElement) {
-      try {
-        await el.requestFullscreen()
-        await lockLandscape()
-        setIsFullscreen(true)
-      } catch {
-        // fallback: try webkit
-        const wkEl = el as any
-        if (wkEl.webkitRequestFullscreen) {
-          wkEl.webkitRequestFullscreen()
-          setIsFullscreen(true)
-        }
-      }
-    } else {
-      document.exitFullscreen()
-      unlockOrientation()
-      setIsFullscreen(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    const handler = () => {
-      const inFS = !!document.fullscreenElement
-      setIsFullscreen(inFS)
-      if (!inFS) unlockOrientation()
-    }
-    document.addEventListener('fullscreenchange', handler)
-    document.addEventListener('webkitfullscreenchange', handler)
-    return () => {
-      document.removeEventListener('fullscreenchange', handler)
-      document.removeEventListener('webkitfullscreenchange', handler)
-    }
-  }, [])
-
-  // Reset iframe loaded state on source/episode change
+  // Reset loading state on any change
   useEffect(() => {
     setIframeLoaded(false)
   }, [iframeKey, sourceId, season, episode])
@@ -283,24 +217,11 @@ export const WatchPage: React.FC = () => {
       )}
 
       {/* ── Player ── */}
-      {/* 
-        - On desktop: 16/9 aspect ratio inside normal flow
-        - On mobile fullscreen: fills entire screen in landscape via CSS 
-          + screen.orientation.lock('landscape')
-      */}
+      {/* ── Player ── */}
       <div className="flex-1 flex flex-col items-center justify-center bg-black px-0 sm:px-4 sm:py-4">
         <div
-          ref={containerRef}
-          className={`relative w-full bg-black transition-all ${
-            isFullscreen
-              ? 'fixed inset-0 z-[9999] w-screen h-screen'
-              : 'max-w-6xl mx-auto rounded-none sm:rounded-xl ring-0 sm:ring-1 sm:ring-zinc-800'
-          }`}
-          style={
-            isFullscreen
-              ? { isolation: 'isolate' }
-              : { aspectRatio: '16/9', isolation: 'isolate', contain: 'strict', overflow: 'hidden' }
-          }
+          className="relative w-full max-w-6xl mx-auto rounded-none sm:rounded-xl ring-0 sm:ring-1 sm:ring-zinc-800 bg-black overflow-hidden"
+          style={{ aspectRatio: '16/9', isolation: 'isolate' }}
         >
           {/* Loading overlay */}
           {!iframeLoaded && (
@@ -313,7 +234,7 @@ export const WatchPage: React.FC = () => {
             </div>
           )}
 
-          {/* Iframe */}
+          {/* Iframe — fullscreen handled natively by the embed player */}
           <iframe
             ref={iframeRef}
             key={`${iframeKey}-${sourceId}-${season}-${episode}`}
@@ -323,17 +244,12 @@ export const WatchPage: React.FC = () => {
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             onLoad={() => setIframeLoaded(true)}
             className="absolute inset-0 w-full h-full border-0"
-            style={{
-              colorScheme: 'dark',
-              clipPath: 'inset(0)',
-              contain: 'strict',
-            }}
+            style={{ colorScheme: 'dark' }}
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation"
           />
 
-          {/* Controls overlay (top-right corner of player) */}
-          <div className="absolute top-3 right-3 z-20 flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity">
-            {/* Reload */}
+          {/* Reload button — hover to reveal */}
+          <div className="absolute top-3 right-3 z-20 opacity-0 hover:opacity-100 transition-opacity">
             <button
               onClick={() => setIframeKey((k) => k + 1)}
               title="Reload player"
@@ -341,73 +257,21 @@ export const WatchPage: React.FC = () => {
             >
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
-
-            {/* Fullscreen + landscape lock */}
-            <button
-              onClick={handleFullscreen}
-              title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen (landscape)'}
-              className="w-8 h-8 rounded-full bg-black/70 hover:bg-black flex items-center justify-center text-white/80 hover:text-white transition-colors"
-            >
-              {isFullscreen ? (
-                <Minimize className="w-3.5 h-3.5" />
-              ) : (
-                <Maximize className="w-3.5 h-3.5" />
-              )}
-            </button>
           </div>
         </div>
 
         {/* ── Tip ── */}
-        {!isFullscreen && (
-          <div className="w-full max-w-6xl mx-auto mt-3 px-4 sm:px-0">
-            <div className="flex items-start gap-2 text-zinc-600 text-xs">
-              <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-              <p>
-                فالموبايل — دير <strong className="text-zinc-500">Fullscreen</strong> وغادي يتحول
-                للوضع الأفقي تلقائيا. إلا ما خدمش الفيديو، جرب سيرفر آخر.
-              </p>
-            </div>
-
-            {/* Ad / popup warning */}
-            <div className="flex items-start gap-2 text-zinc-600 text-xs mt-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-yellow-600/60" />
-              <p>
-                هاد السيرفيرات ممكن يطلعو إعلانات — خدم
-                <strong className="text-zinc-500"> popup blocker</strong> فالمتصفح ديالك.
-              </p>
-            </div>
+        <div className="w-full max-w-6xl mx-auto mt-3 px-4 sm:px-0">
+          <div className="flex items-start gap-2 text-zinc-600 text-xs mt-1.5">
+            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-yellow-600/60" />
+            <p>
+              هاد السيرفيرات ممكن يطلعو إعلانات — خدم
+              <strong className="text-zinc-500"> popup blocker</strong> فالمتصفح ديالك.
+            </p>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* ── CSS: force landscape inside fullscreen on mobile ── */}
-      <style>{`
-        @media screen and (orientation: portrait) {
-          :-webkit-full-screen div[data-player] {
-            transform: rotate(90deg);
-            transform-origin: center center;
-            width: 100vh;
-            height: 100vw;
-          }
-        }
-
-        /* Hide navbar when fullscreen */
-        :fullscreen ~ * nav,
-        :fullscreen ~ nav {
-          display: none !important;
-        }
-
-        /* iOS Safari fullscreen helper */
-        @supports (-webkit-touch-callout: none) {
-          .fullscreen-ios {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            width: 100vw;
-            height: 100vh;
-          }
-        }
-      `}</style>
     </div>
   )
 }
