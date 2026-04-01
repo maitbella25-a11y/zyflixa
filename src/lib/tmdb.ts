@@ -6,12 +6,12 @@ export const TMDB_CONFIG = {
 }
 
 export const getImageUrl = (path: string | null, size: string = 'w500'): string => {
-  if (!path) return '/placeholder.webp'
+  if (!path) return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='450' viewBox='0 0 300 450'%3E%3Crect width='300' height='450' fill='%2327272a'/%3E%3Crect x='110' y='185' width='80' height='60' rx='4' fill='%2352525b'/%3E%3Ctext x='150' y='270' text-anchor='middle' fill='%2371717a' font-size='12' font-family='sans-serif'%3ENo Image%3C/text%3E%3C/svg%3E`
   return `${TMDB_CONFIG.IMAGE_BASE}/${size}${path}`
 }
 
 export const getBackdropUrl = (path: string | null): string => {
-  if (!path) return '/placeholder-backdrop.webp'
+  if (!path) return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1280' height='720' viewBox='0 0 1280 720'%3E%3Crect width='1280' height='720' fill='%2318181b'/%3E%3C/svg%3E`
   return `${TMDB_CONFIG.IMAGE_BASE}/original${path}`
 }
 
