@@ -10,6 +10,11 @@ export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
 
+  // Hide navbar on watch page
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/watch/')) {
+    return null
+  }
+
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 20)
     window.addEventListener('scroll', onScroll, { passive: true })

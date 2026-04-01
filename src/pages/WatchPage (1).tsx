@@ -173,7 +173,7 @@ export const WatchPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-black flex flex-col">
       {/* ── Top Bar ── */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-zinc-950 border-b border-zinc-800/60 pt-20 flex-shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 bg-zinc-950 border-b border-zinc-800/60 flex-shrink-0">
         <Link
           to="/details/$mediaType/$id"
           params={{ mediaType, id: String(id) }}
@@ -291,12 +291,16 @@ export const WatchPage: React.FC = () => {
       <div className="flex-1 flex flex-col items-center justify-center bg-black px-0 sm:px-4 sm:py-4">
         <div
           ref={containerRef}
-          className={`relative w-full bg-black overflow-hidden transition-all ${
+          className={`relative w-full bg-black transition-all ${
             isFullscreen
               ? 'fixed inset-0 z-[9999] w-screen h-screen'
               : 'max-w-6xl mx-auto rounded-none sm:rounded-xl ring-0 sm:ring-1 sm:ring-zinc-800'
           }`}
-          style={isFullscreen ? {} : { aspectRatio: '16/9' }}
+          style={
+            isFullscreen
+              ? { isolation: 'isolate' }
+              : { aspectRatio: '16/9', isolation: 'isolate', contain: 'strict', overflow: 'hidden' }
+          }
         >
           {/* Loading overlay */}
           {!iframeLoaded && (
@@ -319,7 +323,12 @@ export const WatchPage: React.FC = () => {
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             onLoad={() => setIframeLoaded(true)}
             className="absolute inset-0 w-full h-full border-0"
-            style={{ colorScheme: 'dark' }}
+            style={{
+              colorScheme: 'dark',
+              clipPath: 'inset(0)',
+              contain: 'strict',
+            }}
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation"
           />
 
           {/* Controls overlay (top-right corner of player) */}
