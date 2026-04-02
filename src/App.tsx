@@ -16,33 +16,34 @@ import { WatchlistPage } from './pages/WatchlistPage'
 import { Link } from '@tanstack/react-router'
 
 const rootRoute = createRootRoute({
-  component: () => (
-    <div className="min-h-screen bg-[#141414]">
-      <Navbar />
-      <Outlet />
-    </div>
-  ),
-  notFoundComponent: () => (
-    <div className="min-h-screen bg-[#141414] flex flex-col items-center justify-center gap-6 pt-16">
-      <div className="text-center">
-        <div
-          className="text-8xl font-black text-[#E50914] mb-4"
-          style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-        >
-          404
-        </div>
-        <h1 className="text-2xl font-bold text-white mb-2">Page Not Found</h1>
-        <p className="text-zinc-400 mb-6">The page you're looking for doesn't exist.</p>
-        <Link
-          to="/"
-          className="bg-white text-black font-bold px-6 py-3 rounded-md hover:bg-white/90 transition-all text-sm inline-block"
-        >
-          Go Home
-        </Link>
-      </div>
-    </div>
-  ),
+component: () => {
+const path = window.location.pathname
+const isWatchPage = path.startsWith('/watch')
+
+```
+return (
+  <div className="min-h-screen bg-[#141414]">
+    {!isWatchPage && <Navbar />}
+    <Outlet />
+  </div>
+)
+```
+
+},
+
+notFoundComponent: () => ( <div className="min-h-screen bg-[#141414] flex flex-col items-center justify-center gap-6 pt-16"> <div className="text-center">
+<div
+className="text-8xl font-black text-[#E50914] mb-4"
+style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+>
+404 </div> <h1 className="text-2xl font-bold text-white mb-2">Page Not Found</h1> <p className="text-zinc-400 mb-6">The page you're looking for doesn't exist.</p> <Link
+       to="/"
+       className="bg-white text-black font-bold px-6 py-3 rounded-md hover:bg-white/90 transition-all text-sm inline-block"
+     >
+Go Home </Link> </div> </div>
+),
 })
+
 
 const indexRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/',                        component: HomePage })
 const searchRoute   = createRoute({ getParentRoute: () => rootRoute, path: '/search',                  component: SearchPage })
