@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, Server, Monitor, RefreshCw, ChevronDown, AlertTriangle } from 'lucide-react'
 import { useMovieDetails, useTVDetails } from '../hooks/useMovies'
 import { Spinner } from '../components/ui/Spinner'
+import { rankServers, recordSuccess, recordFailure } from '../hooks/useServerRanking'
 
 interface EmbedSource {
   id: string
@@ -83,17 +84,20 @@ export const WatchPage: React.FC = () => {
   const mediaType = params.mediaType as 'movie' | 'tv'
   const id        = parseInt(params.id, 10)
 
-  const [sourceId, setSourceId]       = useState(SOURCES[0].id)
-  const [season, setSeason]           = useState(1)
-  const [episode, setEpisode]         = useState(1)
-  const [iframeKey, setIframeKey]     = useState(0)
+  // Sort servers by historical success score — best first
+  const rankedSources = useMemo(() => rankServers(SOURCES), [])
+
+  const [sourceId, setSourceId]         = useState(rankedSources[0].id)
+  const [season, setSeason]             = useState(1)
+  const [episode, setEpisode]           = useState(1)
+  const [iframeKey, setIframeKey]       = useState(0)
   const [iframeLoaded, setIframeLoaded] = useState(false)
-  const [showOverlay, setShowOverlay] = useState(true)
-  const [showSources, setShowSources] = useState(false)
+  const [showOverlay, setShowOverlay]   = useState(true)
+  const [showSources, setShowSources]   = useState(false)
   const [showEpisodes, setShowEpisodes] = useState(false)
-  const [loadError, setLoadError]     = useState(false)
+  const [loadError, setLoadError]       = useState(false)
   const [autoFallback, setAutoFallback] = useState(false)
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hideTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { data: movieData, isLoading: movieLoading } = useMovieDetails(mediaType === 'movie' ? id : 0)
@@ -106,38 +110,38 @@ export const WatchPage: React.FC = () => {
   const totalEpisodes     = (details as any)?.number_of_episodes ?? 50
   const episodesPerSeason = Math.max(13, Math.ceil(totalEpisodes / Math.max(totalSeasons, 1)))
 
-  const currentSource = SOURCES.find((s) => s.id === sourceId) ?? SOURCES[0]
-  const embedUrl      = currentSource.getUrl(mediaType, id, season, episode)
-  const currentSourceIndex = SOURCES.findIndex((s) => s.id === sourceId)
+  const currentSource      = rankedSources.find((s) => s.id === sourceId) ?? rankedSources[0]
+  const embedUrl           = currentSource.getUrl(mediaType, id, season, episode)
+  const currentSourceIndex = rankedSources.findIndex((s) => s.id === sourceId)
 
-  // Auto-fallback: after 10s with no load → silently switch to next source
+  // Auto-fallback: after 10s with no load → record failure + silently switch
   useEffect(() => {
     setIframeLoaded(false)
     setLoadError(false)
     setAutoFallback(false)
     if (errorTimer.current) clearTimeout(errorTimer.current)
     errorTimer.current = setTimeout(() => {
-      const next = (currentSourceIndex + 1) % SOURCES.length
+      recordFailure(sourceId)
+      const next = (currentSourceIndex + 1) % rankedSources.length
       if (next !== 0) {
-        // still have servers to try → auto-switch silently
-        setSourceId(SOURCES[next].id)
+        setSourceId(rankedSources[next].id)
         setIframeKey((k) => k + 1)
         setAutoFallback(true)
       } else {
-        // tried them all → show error banner
         setLoadError(true)
       }
     }, 10000)
     return () => { if (errorTimer.current) clearTimeout(errorTimer.current) }
-  }, [iframeKey, sourceId, currentSourceIndex])
+  }, [iframeKey, sourceId, currentSourceIndex, rankedSources])
 
   const tryNextSource = useCallback(() => {
-    const next = SOURCES[(currentSourceIndex + 1) % SOURCES.length]
+    recordFailure(sourceId)
+    const next = rankedSources[(currentSourceIndex + 1) % rankedSources.length]
     setSourceId(next.id)
     setIframeKey((k) => k + 1)
     setAutoFallback(true)
     setLoadError(false)
-  }, [currentSourceIndex])
+  }, [currentSourceIndex, rankedSources, sourceId])
 
   // Show/hide overlay on mouse move
   const handleMouseMove = useCallback(() => {
@@ -184,6 +188,7 @@ export const WatchPage: React.FC = () => {
         onLoad={() => {
           setIframeLoaded(true)
           setLoadError(false)
+          recordSuccess(sourceId)
           if (errorTimer.current) clearTimeout(errorTimer.current)
         }}
       />
@@ -322,19 +327,19 @@ export const WatchPage: React.FC = () => {
                       style={{ minWidth: 180 }}
                     >
                       <p className="text-zinc-500 text-[10px] uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <Monitor className="w-3 h-3" /> Servers ({SOURCES.length})
+                        <Monitor className="w-3 h-3" /> Servers ({rankedSources.length})
                       </p>
                       <div className="flex flex-col gap-1.5">
-                        {SOURCES.map((src) => (
+                        {rankedSources.map((src) => (
                           <button key={src.id}
                             onClick={() => { setSourceId(src.id); setIframeKey((k) => k + 1); setShowSources(false) }}
-                            className={`text-xs px-3 py-1.5 rounded-lg border text-left transition-all ${
+                            className={`text-xs px-3 py-1.5 rounded-lg border text-left transition-all flex items-center justify-between gap-2 ${
                               src.id === sourceId
                                 ? 'bg-[#E50914] text-white border-[#E50914]'
                                 : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700 hover:text-white'
                             }`}
                           >
-                            {src.label}
+                            <span>{src.label}</span>
                           </button>
                         ))}
                       </div>
