@@ -79,7 +79,10 @@ export const DetailsPage: React.FC = () => {
     details.videos?.results?.find((v) => v.type === 'Trailer' && v.site === 'YouTube') ||
     details.videos?.results?.[0]
   const cast = details.credits?.cast?.slice(0, 15) || []
-  const similar = details.similar?.results?.slice(0, 20) || []
+  const similar = (details.similar?.results?.slice(0, 20) || []).map((m) => ({
+    ...m,
+    media_type: m.media_type || mediaType,
+  }))
   const backdropUrl = getBackdropUrl(details.backdrop_path)
   const posterUrl = getImageUrl(details.poster_path, 'w500')
 
