@@ -142,7 +142,7 @@ export const WatchPage: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 bg-black flex flex-col"
+      className="fixed inset-0 z-[100] bg-black flex flex-col"
       onMouseMove={handleMouseMove}
       onClick={() => setShowOverlay((v) => !v)}
     >
