@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useNavigate } from 'framer-motion'
+import { useNavigate as useTSNavigate } from '@tanstack/react-router'
 import { Search, X, Film, Tv, Sparkles } from 'lucide-react'
 import { useSearch } from '../hooks/useMovies'
 import { useQuery } from '@tanstack/react-query'
@@ -12,10 +13,10 @@ import type { AnimeEntry } from '../lib/api'
 type FilterType = 'all' | 'movie' | 'tv' | 'anime'
 
 const FILTERS: { type: FilterType; label: string; icon: React.ReactNode }[] = [
-  { type: 'all', label: 'All', icon: <Search className="w-3.5 h-3.5" /> },
-  { type: 'movie', label: 'Movies', icon: <Film className="w-3.5 h-3.5" /> },
-  { type: 'tv', label: 'TV Shows', icon: <Tv className="w-3.5 h-3.5" /> },
-  { type: 'anime', label: 'Anime', icon: <Sparkles className="w-3.5 h-3.5" /> },
+  { type: 'all',   label: 'All',      icon: <Search className="w-3.5 h-3.5" /> },
+  { type: 'movie', label: 'Movies',   icon: <Film className="w-3.5 h-3.5" /> },
+  { type: 'tv',    label: 'TV Shows', icon: <Tv className="w-3.5 h-3.5" /> },
+  { type: 'anime', label: 'Anime',    icon: <Sparkles className="w-3.5 h-3.5" /> },
 ]
 
 export const SearchPage: React.FC = () => {
@@ -24,20 +25,21 @@ export const SearchPage: React.FC = () => {
   const [filter, setFilter] = useState<FilterType>('all')
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // debounce
+  // Debounce
   useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedQuery(query), 500)
-    return () => clearTimeout(timeout)
+    const t = setTimeout(() => setDebouncedQuery(query), 400)
+    return () => clearTimeout(t)
   }, [query])
 
-  // Parse query from URL
+  // Parse query from URL on mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const q = params.get('q') || ''
+    const q = new URLSearchParams(window.location.search).get('q') || ''
     setQuery(q)
-    if (q) inputRef.current?.focus()
+    setDebouncedQuery(q)
+    setTimeout(() => inputRef.current?.focus(), 100)
   }, [])
 
+  // Sync query to URL without page reload
   const handleChange = (value: string) => {
     setQuery(value)
     const url = new URL(window.location.href)
@@ -46,17 +48,15 @@ export const SearchPage: React.FC = () => {
     window.history.replaceState({}, '', url.toString())
   }
 
-  // TMDB search
   const { data: tmdbData, isLoading: tmdbLoading } = useSearch(debouncedQuery)
 
-  // Anime search
   const { data: animeResults = [], isLoading: animeLoading } = useQuery({
     queryKey: ['anime-search', debouncedQuery],
     queryFn: () => searchAnime(debouncedQuery),
     enabled: debouncedQuery.length >= 1 && (filter === 'all' || filter === 'anime'),
+    staleTime: 5 * 60 * 1000,
   })
 
-  // Filter TMDB
   const tmdbResults: Movie[] = (tmdbData?.results || []).filter((m: Movie) => {
     if (m.media_type === 'person') return false
     if (filter === 'all') return true
@@ -64,22 +64,25 @@ export const SearchPage: React.FC = () => {
     return m.media_type === filter
   })
 
-  // Normalize anime
   const normalizedAnime = animeResults.map((a: AnimeEntry) => ({
     id: a.mal_id,
-    title: a.title,
-    poster_path: a.images?.jpg?.image_url,
-    vote_average: a.score,
+    title: (a as any).title_english || a.title,
+    name: (a as any).title_english || a.title,
+    poster_path: (a as any).images?.jpg?.large_image_url || (a as any).images?.jpg?.image_url,
+    vote_average: a.score || 0,
     media_type: 'anime',
+    overview: a.synopsis || '',
+    genre_ids: [],
+    vote_count: 0,
+    popularity: 0,
+    adult: false,
+    backdrop_path: null,
   }))
 
-  // Combine + sort
   const allResults = (
-    filter === 'anime'
-      ? normalizedAnime
-      : filter === 'all'
-      ? [...tmdbResults, ...normalizedAnime]
-      : tmdbResults
+    filter === 'anime' ? normalizedAnime :
+    filter === 'all'   ? [...tmdbResults, ...normalizedAnime] :
+    tmdbResults
   ).sort((a: any, b: any) => (b.vote_average || 0) - (a.vote_average || 0))
 
   const isLoading = tmdbLoading || animeLoading
@@ -118,9 +121,7 @@ export const SearchPage: React.FC = () => {
               onClick={() => setFilter(f.type)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                 filter === f.type
-                  ? f.type === 'anime'
-                    ? 'bg-violet-600 text-white'
-                    : 'bg-[#E50914] text-white'
+                  ? f.type === 'anime' ? 'bg-violet-600 text-white' : 'bg-[#E50914] text-white'
                   : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
               }`}
             >
@@ -174,7 +175,6 @@ export const SearchPage: React.FC = () => {
           </>
         )}
 
-        {/* Empty state */}
         {!debouncedQuery && (
           <div className="text-center text-zinc-500 py-20">
             <Search className="w-12 h-12 mx-auto mb-4 opacity-30" />

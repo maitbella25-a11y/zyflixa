@@ -54,8 +54,8 @@ export const MovieCard: React.FC<MovieCardProps> = memo(({ movie, index = 0 }) =
       className="flex-shrink-0 w-[140px] xs:w-[150px] sm:w-[160px] md:w-[180px] lg:w-[195px] group cursor-pointer"
     >
       <Link
-        to="/details/$mediaType/$id"
-        params={{ mediaType: mediaTypeForLink, id: String(movie.id) }}
+        to={isAnime ? '/anime/$id' : '/details/$mediaType/$id'}
+        params={isAnime ? { id: String(movie.id) } : { mediaType: mediaTypeForLink, id: String(movie.id) }}
       >
         <div className="relative overflow-hidden rounded-lg bg-zinc-800 aspect-[2/3] mb-2 transition-all duration-300 group-hover:scale-[1.03] group-hover:shadow-[0_10px_40px_rgba(0,0,0,0.9)] group-hover:ring-1 group-hover:ring-white/20">
           {/* Image */}

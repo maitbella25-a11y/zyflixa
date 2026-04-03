@@ -429,3 +429,25 @@ export const searchAnime = async (query: string): Promise<AnimeEntry[]> => {
     return []
   }
 }
+
+export const getAnimeById = async (id: number): Promise<AnimeEntry | null> => {
+  try {
+    const res = await fetch(`${JIKAN_BASE}/anime/${id}/full`)
+    if (!res.ok) return null
+    const data = await res.json() as { data: AnimeEntry }
+    return normalizeAnime(data.data)
+  } catch {
+    return null
+  }
+}
+
+export const getAnimeCharacters = async (id: number): Promise<{ character: { name: string; images: { jpg: { image_url: string } } }; role: string }[]> => {
+  try {
+    const res = await fetch(`${JIKAN_BASE}/anime/${id}/characters`)
+    if (!res.ok) return []
+    const data = await res.json() as { data: any[] }
+    return (data.data || []).slice(0, 12)
+  } catch {
+    return []
+  }
+}

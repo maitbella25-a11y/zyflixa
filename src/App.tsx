@@ -10,6 +10,7 @@ import { Navbar } from './components/Navbar'
 import { HomePage } from './pages/HomePage'
 import { SearchPage } from './pages/SearchPage'
 import { DetailsPage } from './pages/DetailsPage'
+import { AnimeDetailsPage } from './pages/AnimeDetailsPage'
 import { WatchPage } from './pages/WatchPage'
 import { BrowsePage } from './pages/BrowsePage'
 import { WatchlistPage } from './pages/WatchlistPage'
@@ -68,6 +69,7 @@ const ProfilePage: React.FC = () => (
 const indexRoute     = createRoute({ getParentRoute: () => rootRoute, path: '/',                       component: HomePage })
 const searchRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/search',                 component: SearchPage })
 const detailsRoute   = createRoute({ getParentRoute: () => rootRoute, path: '/details/$mediaType/$id', component: DetailsPage })
+const animeRoute     = createRoute({ getParentRoute: () => rootRoute, path: '/anime/$id',              component: AnimeDetailsPage })
 const browseRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/browse/$category',       component: BrowsePage })
 const watchlistRoute = createRoute({ getParentRoute: () => rootRoute, path: '/watchlist',              component: WatchlistPage })
 const profileRoute   = createRoute({ getParentRoute: () => rootRoute, path: '/profile',               component: ProfilePage })
@@ -83,6 +85,7 @@ const routeTree = rootRoute.addChildren([
   indexRoute,
   searchRoute,
   detailsRoute,
+  animeRoute,
   watchRoute,
   browseRoute,
   watchlistRoute,
