@@ -18,19 +18,11 @@ const queryClient = new QueryClient({
     queries: {
       retry: 2,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000,   // data stays fresh 5 min — less refetching
-      gcTime: 30 * 60 * 1000,     // keep in memory 30 min
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
     },
   },
 })
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </React.StrictMode>,
-)
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
