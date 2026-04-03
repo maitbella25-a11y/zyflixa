@@ -1,18 +1,25 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BlinkUIProvider, Toaster } from '@blinkdotnew/ui'
 import App from './App'
 import './index.css'
 
-// Force dark mode for streaming app
 document.documentElement.classList.add('dark')
+
+// Register service worker for image caching
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+  })
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 2,
       refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000,   // data stays fresh 5 min — less refetching
+      gcTime: 30 * 60 * 1000,     // keep in memory 30 min
     },
   },
 })
@@ -20,10 +27,15 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BlinkUIProvider theme="linear" darkMode="dark">
-        <Toaster position="bottom-right" />
-        <App />
-      </BlinkUIProvider>
+      <App />
+    </QueryClientProvider>
+  </React.StrictMode>,
+)
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <App />
     </QueryClientProvider>
   </React.StrictMode>,
 )

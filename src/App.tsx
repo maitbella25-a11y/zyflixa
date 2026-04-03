@@ -15,6 +15,7 @@ import { BrowsePage } from './pages/BrowsePage'
 import { WatchlistPage } from './pages/WatchlistPage'
 import { Link } from '@tanstack/react-router'
 
+// ── Root WITH Navbar (all normal pages) ──────────────────────────────────────
 const rootRoute = createRootRoute({
   component: () => (
     <div className="min-h-screen bg-[#141414]">
@@ -44,13 +45,6 @@ const rootRoute = createRootRoute({
   ),
 })
 
-const indexRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/',                        component: HomePage })
-const searchRoute   = createRoute({ getParentRoute: () => rootRoute, path: '/search',                  component: SearchPage })
-const detailsRoute  = createRoute({ getParentRoute: () => rootRoute, path: '/details/$mediaType/$id',  component: DetailsPage })
-const watchRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/watch/$mediaType/$id',    component: WatchPage })
-const browseRoute   = createRoute({ getParentRoute: () => rootRoute, path: '/browse/$category',        component: BrowsePage })
-const watchlistRoute= createRoute({ getParentRoute: () => rootRoute, path: '/watchlist',               component: WatchlistPage })
-
 const ProfilePage: React.FC = () => (
   <div className="min-h-screen bg-[#141414] pt-24 px-8 flex items-center justify-center">
     <div className="text-center">
@@ -71,7 +65,19 @@ const ProfilePage: React.FC = () => (
   </div>
 )
 
-const profileRoute = createRoute({ getParentRoute: () => rootRoute, path: '/profile', component: ProfilePage })
+const indexRoute     = createRoute({ getParentRoute: () => rootRoute, path: '/',                       component: HomePage })
+const searchRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/search',                 component: SearchPage })
+const detailsRoute   = createRoute({ getParentRoute: () => rootRoute, path: '/details/$mediaType/$id', component: DetailsPage })
+const browseRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/browse/$category',       component: BrowsePage })
+const watchlistRoute = createRoute({ getParentRoute: () => rootRoute, path: '/watchlist',              component: WatchlistPage })
+const profileRoute   = createRoute({ getParentRoute: () => rootRoute, path: '/profile',               component: ProfilePage })
+
+// ── Watch route — NO Navbar, full black screen ───────────────────────────────
+const watchRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/watch/$mediaType/$id',
+  component: WatchPage,
+})
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
