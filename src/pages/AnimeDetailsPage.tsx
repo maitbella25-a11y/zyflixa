@@ -156,8 +156,8 @@ export const AnimeDetailsPage: React.FC = () => {
             {/* CTA Buttons */}
             <div className="flex flex-wrap gap-3">
               <Link
-                to="/watch/$mediaType/$id"
-                params={{ mediaType: 'tv', id: String(id) }}
+                to="/watch/anime/$id"
+                params={{ id: String(id) }}
                 className="flex items-center gap-2 bg-white text-black font-bold px-6 py-3 rounded-lg hover:bg-white/90 active:scale-95 transition-all text-sm shadow-lg"
               >
                 <Play className="w-5 h-5 fill-black" />

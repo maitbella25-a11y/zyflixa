@@ -12,6 +12,7 @@ import { SearchPage } from './pages/SearchPage'
 import { DetailsPage } from './pages/DetailsPage'
 import { AnimeDetailsPage } from './pages/AnimeDetailsPage'
 import { WatchPage } from './pages/WatchPage'
+import { AnimeWatchPage } from './pages/AnimeWatchPage'
 import { BrowsePage } from './pages/BrowsePage'
 import { WatchlistPage } from './pages/WatchlistPage'
 import { Link } from '@tanstack/react-router'
@@ -81,12 +82,19 @@ const watchRoute = createRoute({
   component: WatchPage,
 })
 
+const animeWatchRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/watch/anime/$id',
+  component: AnimeWatchPage,
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   searchRoute,
   detailsRoute,
   animeRoute,
   watchRoute,
+  animeWatchRoute,
   browseRoute,
   watchlistRoute,
   profileRoute,
