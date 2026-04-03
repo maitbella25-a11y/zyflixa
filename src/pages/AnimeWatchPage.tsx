@@ -15,32 +15,55 @@ interface AnimeEmbedSource {
 // ── Servers that accept MAL ID directly ──────────────────────────────────────
 const ANIME_SOURCES: AnimeEmbedSource[] = [
   {
-    id: 'yugenanime',
-    label: 'YugenAnime',
-    getUrl: (id, ep = 1) => `https://yugenanime.tv/watch/${id}/${ep}/`,
+    // MegaPlay: dedicated anime embed API — supports MAL ID + episode number
+    id: 'megaplay',
+    label: 'MegaPlay',
+    getUrl: (id, ep = 1) => `https://megaplay.buzz/stream/s-2/${id}/sub?mal=${id}&ep=${ep}`,
   },
   {
+    // Autoembed supports anime via MAL ID
+    id: 'autoembed-anime',
+    label: 'AutoEmbed',
+    getUrl: (id, ep = 1) => `https://autoembed.cc/anime/mal/${id}/${ep}`,
+  },
+  {
+    // Videasy — supports anime with MAL ID
+    id: 'videasy-anime',
+    label: 'Videasy',
+    getUrl: (id, ep = 1) => `https://player.videasy.net/anime/${id}/${ep}`,
+  },
+  {
+    // VidSrc supports anime too
+    id: 'vidsrc-anime',
+    label: 'VidSrc',
+    getUrl: (id, ep = 1) => `https://vidsrc.me/embed/anime?mal=${id}&episode=${ep}`,
+  },
+  {
+    // AniWatch.to (aniwatchtv.to) — still working in 2026 as HiAnime successor
+    id: 'aniwatch',
+    label: 'AniWatch',
+    getUrl: (id) => `https://aniwatchtv.to/search?keyword=${id}`,
+  },
+  {
+    // AnimePahe — known for good quality & minimal ads
     id: 'animepahe',
     label: 'AnimePahe',
     getUrl: (id) => `https://animepahe.ru/a/${id}`,
   },
   {
+    // 9AnimeTV — popular mirror working in 2026
+    id: '9animetv',
+    label: '9AnimeTV',
+    getUrl: (id) => `https://9animetv.to/search?keyword=${id}`,
+  },
+  {
+    // GogoAnime (Anitaku) — massive library, still active
     id: 'gogoanime',
     label: 'GogoAnime',
-    getUrl: (id, ep = 1) =>
-      `https://anitaku.pe/category/${id}`,
+    getUrl: (id) => `https://anitaku.pe/category/${id}`,
   },
   {
-    id: '9anime',
-    label: '9Anime',
-    getUrl: (id) => `https://aniwatch.to/search?keyword=${id}`,
-  },
-  {
-    id: 'hianime',
-    label: 'HiAnime',
-    getUrl: (id) => `https://hianime.to/search?keyword=${id}`,
-  },
-  {
+    // AllAnime — good alternative, active in 2026
     id: 'allanime',
     label: 'AllAnime',
     getUrl: (id) => `https://allanime.to/anime/${id}`,

@@ -38,12 +38,44 @@ const SOURCES: EmbedSource[] = [
         : `https://vidlink.pro/tv/${id}/${s ?? 1}/${e ?? 1}?autoplay=true`,
   },
   {
+    id: 'videasy',
+    label: 'Videasy',
+    getUrl: (t, id, s, e) =>
+      t === 'movie'
+        ? `https://player.videasy.net/movie/${id}`
+        : `https://player.videasy.net/tv/${id}/${s ?? 1}/${e ?? 1}`,
+  },
+  {
+    id: 'vidsrc-cc',
+    label: 'VidSrc CC',
+    getUrl: (t, id, s, e) =>
+      t === 'movie'
+        ? `https://vidsrc.cc/v2/embed/movie/${id}`
+        : `https://vidsrc.cc/v2/embed/tv/${id}/${s ?? 1}/${e ?? 1}`,
+  },
+  {
+    id: 'vidfast',
+    label: 'VidFast',
+    getUrl: (t, id, s, e) =>
+      t === 'movie'
+        ? `https://vidfast.pro/movie/${id}?autoPlay=true`
+        : `https://vidfast.pro/tv/${id}/${s ?? 1}/${e ?? 1}?autoPlay=true`,
+  },
+  {
     id: 'autoembed',
     label: 'AutoEmbed',
     getUrl: (t, id, s, e) =>
       t === 'movie'
         ? `https://autoembed.cc/movie/tmdb/${id}`
         : `https://autoembed.cc/tv/tmdb/${id}-${s ?? 1}-${e ?? 1}`,
+  },
+  {
+    id: 'superembed',
+    label: 'SuperEmbed',
+    getUrl: (t, id, s, e) =>
+      t === 'movie'
+        ? `https://www.superembed.stream/embed/movie/${id}`
+        : `https://www.superembed.stream/embed/tv/${id}/${s ?? 1}/${e ?? 1}`,
   },
   {
     id: 'multiembed',
@@ -62,12 +94,28 @@ const SOURCES: EmbedSource[] = [
         : `https://www.2embed.cc/embedtv/${id}&s=${s ?? 1}&e=${e ?? 1}`,
   },
   {
-    id: 'vidsrc-xyz',
+    id: 'vidsrc-pro',
     label: 'VidSrc Pro',
+    getUrl: (t, id, s, e) =>
+      t === 'movie'
+        ? `https://vidsrc.pro/embed/movie/${id}`
+        : `https://vidsrc.pro/embed/tv/${id}/${s ?? 1}/${e ?? 1}`,
+  },
+  {
+    id: 'vidsrc-xyz',
+    label: 'VidSrc XYZ',
     getUrl: (t, id, s, e) =>
       t === 'movie'
         ? `https://vidsrc.xyz/embed/movie/${id}`
         : `https://vidsrc.xyz/embed/tv/${id}/${s ?? 1}/${e ?? 1}`,
+  },
+  {
+    id: 'rivestream',
+    label: 'RiveStream',
+    getUrl: (t, id, s, e) =>
+      t === 'movie'
+        ? `https://rivestream.org/embed?type=movie&id=${id}`
+        : `https://rivestream.org/embed?type=tv&id=${id}&season=${s ?? 1}&episode=${e ?? 1}`,
   },
   {
     id: 'nontonfilm',
