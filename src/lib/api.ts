@@ -374,6 +374,40 @@ export const getPersonDetails = async (id: number): Promise<Record<string, unkno
 
 const JIKAN_BASE = 'https://api.jikan.moe/v4'
 
+// ─── Jikan Rate-Limit Queue (max 3 req/sec) ───────────────────────────────────
+const jikanQueue: (() => void)[] = []
+let jikanActive = 0
+const JIKAN_MAX = 2 // stay under the 3/sec limit
+
+const jikanNext = () => {
+  if (jikanActive >= JIKAN_MAX || jikanQueue.length === 0) return
+  jikanActive++
+  const run = jikanQueue.shift()!
+  run()
+}
+
+const jikanFetch = (url: string): Promise<Response> =>
+  new Promise((resolve, reject) => {
+    jikanQueue.push(async () => {
+      try {
+        // retry up to 3 times on 429
+        let res: Response | null = null
+        for (let attempt = 0; attempt < 3; attempt++) {
+          res = await fetch(url)
+          if (res.status !== 429) break
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
+        }
+        resolve(res!)
+      } catch (e) {
+        reject(e)
+      } finally {
+        jikanActive--
+        setTimeout(jikanNext, 400) // 400ms gap between requests
+      }
+    })
+    jikanNext()
+  })
+
 // Normalize Jikan anime entry into a Movie-compatible shape for MovieCard
 const normalizeAnime = (anime: AnimeEntry): AnimeEntry => ({
   ...anime,
@@ -388,7 +422,7 @@ const normalizeAnime = (anime: AnimeEntry): AnimeEntry => ({
 
 export const getTopAnime = async (): Promise<AnimeEntry[]> => {
   try {
-    const res = await fetch(`${JIKAN_BASE}/top/anime?limit=20`)
+    const res = await jikanFetch(`${JIKAN_BASE}/top/anime?limit=20`)
     if (!res.ok) return []
     const data = await res.json() as { data: AnimeEntry[] }
     return (data.data || []).map(normalizeAnime)
@@ -399,7 +433,7 @@ export const getTopAnime = async (): Promise<AnimeEntry[]> => {
 
 export const getSeasonalAnime = async (): Promise<AnimeEntry[]> => {
   try {
-    const res = await fetch(`${JIKAN_BASE}/seasons/now?limit=20`)
+    const res = await jikanFetch(`${JIKAN_BASE}/seasons/now?limit=20`)
     if (!res.ok) return []
     const data = await res.json() as { data: AnimeEntry[] }
     return (data.data || []).map(normalizeAnime)
@@ -410,7 +444,7 @@ export const getSeasonalAnime = async (): Promise<AnimeEntry[]> => {
 
 export const getTrendingAnime = async (): Promise<AnimeEntry[]> => {
   try {
-    const res = await fetch(`${JIKAN_BASE}/top/anime?filter=airing&limit=20`)
+    const res = await jikanFetch(`${JIKAN_BASE}/top/anime?filter=airing&limit=20`)
     if (!res.ok) return []
     const data = await res.json() as { data: AnimeEntry[] }
     return (data.data || []).map(normalizeAnime)
@@ -421,7 +455,7 @@ export const getTrendingAnime = async (): Promise<AnimeEntry[]> => {
 
 export const searchAnime = async (query: string): Promise<AnimeEntry[]> => {
   try {
-    const res = await fetch(`${JIKAN_BASE}/anime?q=${encodeURIComponent(query)}&limit=10&sfw=true`)
+    const res = await jikanFetch(`${JIKAN_BASE}/anime?q=${encodeURIComponent(query)}&limit=10&sfw=true`)
     if (!res.ok) return []
     const data = await res.json() as { data: AnimeEntry[] }
     return (data.data || []).map(normalizeAnime)
@@ -432,7 +466,7 @@ export const searchAnime = async (query: string): Promise<AnimeEntry[]> => {
 
 export const getAnimeById = async (id: number): Promise<AnimeEntry | null> => {
   try {
-    const res = await fetch(`${JIKAN_BASE}/anime/${id}/full`)
+    const res = await jikanFetch(`${JIKAN_BASE}/anime/${id}/full`)
     if (!res.ok) return null
     const data = await res.json() as { data: AnimeEntry }
     return normalizeAnime(data.data)
@@ -443,7 +477,7 @@ export const getAnimeById = async (id: number): Promise<AnimeEntry | null> => {
 
 export const getAnimeCharacters = async (id: number): Promise<{ character: { name: string; images: { jpg: { image_url: string } } }; role: string }[]> => {
   try {
-    const res = await fetch(`${JIKAN_BASE}/anime/${id}/characters`)
+    const res = await jikanFetch(`${JIKAN_BASE}/anime/${id}/characters`)
     if (!res.ok) return []
     const data = await res.json() as { data: any[] }
     return (data.data || []).slice(0, 12)
