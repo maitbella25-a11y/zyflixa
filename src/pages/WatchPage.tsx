@@ -13,20 +13,40 @@ interface EmbedSource {
 
 const SOURCES: EmbedSource[] = [
   {
-    id: 'vidsrc',
+    id: 'vidsrc-me',
     label: 'VidSrc',
     getUrl: (t, id, s, e) =>
-      t === 'movie' ? `https://vidsrc.xyz/embed/movie/${id}` : `https://vidsrc.xyz/embed/tv/${id}/${s ?? 1}/${e ?? 1}`,
+      t === 'movie'
+        ? `https://vidsrc.me/embed/movie?tmdb=${id}`
+        : `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s ?? 1}&episode=${e ?? 1}`,
   },
   {
-    id: 'vidsrc2',
-    label: 'VidSrc 2',
+    id: 'embedsu',
+    label: 'EmbedSu',
     getUrl: (t, id, s, e) =>
-      t === 'movie' ? `https://vidsrc.to/embed/movie/${id}` : `https://vidsrc.to/embed/tv/${id}/${s ?? 1}/${e ?? 1}`,
+      t === 'movie'
+        ? `https://embed.su/embed/movie/${id}`
+        : `https://embed.su/embed/tv/${id}/${s ?? 1}/${e ?? 1}`,
   },
   {
-    id: 'superembed',
-    label: 'SuperEmbed',
+    id: 'vidlink',
+    label: 'VidLink',
+    getUrl: (t, id, s, e) =>
+      t === 'movie'
+        ? `https://vidlink.pro/movie/${id}?autoplay=true`
+        : `https://vidlink.pro/tv/${id}/${s ?? 1}/${e ?? 1}?autoplay=true`,
+  },
+  {
+    id: 'autoembed',
+    label: 'AutoEmbed',
+    getUrl: (t, id, s, e) =>
+      t === 'movie'
+        ? `https://autoembed.cc/movie/tmdb/${id}`
+        : `https://autoembed.cc/tv/tmdb/${id}-${s ?? 1}-${e ?? 1}`,
+  },
+  {
+    id: 'multiembed',
+    label: 'MultiEmbed',
     getUrl: (t, id, s, e) =>
       t === 'movie'
         ? `https://multiembed.mov/?video_id=${id}&tmdb=1`
@@ -36,33 +56,25 @@ const SOURCES: EmbedSource[] = [
     id: '2embed',
     label: '2Embed',
     getUrl: (t, id, s, e) =>
-      t === 'movie' ? `https://www.2embed.cc/embed/${id}` : `https://www.2embed.cc/embedtv/${id}&s=${s ?? 1}&e=${e ?? 1}`,
+      t === 'movie'
+        ? `https://www.2embed.cc/embed/${id}`
+        : `https://www.2embed.cc/embedtv/${id}&s=${s ?? 1}&e=${e ?? 1}`,
   },
   {
-    id: 'embedsu',
-    label: 'EmbedSu',
-    getUrl: (t, id, s, e) =>
-      t === 'movie' ? `https://embed.su/embed/movie/${id}` : `https://embed.su/embed/tv/${id}/${s ?? 1}/${e ?? 1}`,
-  },
-  {
-    id: 'autoembed',
-    label: 'AutoEmbed',
-    getUrl: (t, id, s, e) =>
-      t === 'movie' ? `https://autoembed.cc/movie/tmdb/${id}` : `https://autoembed.cc/tv/tmdb/${id}-${s ?? 1}-${e ?? 1}`,
-  },
-  {
-    id: 'smashystream',
-    label: 'SmashyStream',
+    id: 'vidsrc-xyz',
+    label: 'VidSrc Pro',
     getUrl: (t, id, s, e) =>
       t === 'movie'
-        ? `https://player.smashystream.com/movie/${id}`
-        : `https://player.smashystream.com/tv/${id}/${s ?? 1}/${e ?? 1}`,
+        ? `https://vidsrc.xyz/embed/movie/${id}`
+        : `https://vidsrc.xyz/embed/tv/${id}/${s ?? 1}/${e ?? 1}`,
   },
   {
-    id: 'vidlink',
-    label: 'VidLink',
+    id: 'nontonfilm',
+    label: 'NontonFilm',
     getUrl: (t, id, s, e) =>
-      t === 'movie' ? `https://vidlink.pro/movie/${id}` : `https://vidlink.pro/tv/${id}/${s ?? 1}/${e ?? 1}`,
+      t === 'movie'
+        ? `https://www.NontonFilm.net/api/?tmdb=${id}&type=movie`
+        : `https://www.NontonFilm.net/api/?tmdb=${id}&type=serie&s=${s ?? 1}&e=${e ?? 1}`,
   },
 ]
 
@@ -98,17 +110,26 @@ export const WatchPage: React.FC = () => {
   const embedUrl      = currentSource.getUrl(mediaType, id, season, episode)
   const currentSourceIndex = SOURCES.findIndex((s) => s.id === sourceId)
 
-  // Auto-fallback to next source after 12s if iframe never loads
+  // Auto-fallback: after 10s with no load → silently switch to next source
   useEffect(() => {
     setIframeLoaded(false)
     setLoadError(false)
     setAutoFallback(false)
     if (errorTimer.current) clearTimeout(errorTimer.current)
     errorTimer.current = setTimeout(() => {
-      setLoadError(true)
-    }, 12000)
+      const next = (currentSourceIndex + 1) % SOURCES.length
+      if (next !== 0) {
+        // still have servers to try → auto-switch silently
+        setSourceId(SOURCES[next].id)
+        setIframeKey((k) => k + 1)
+        setAutoFallback(true)
+      } else {
+        // tried them all → show error banner
+        setLoadError(true)
+      }
+    }, 10000)
     return () => { if (errorTimer.current) clearTimeout(errorTimer.current) }
-  }, [iframeKey, sourceId])
+  }, [iframeKey, sourceId, currentSourceIndex])
 
   const tryNextSource = useCallback(() => {
     const next = SOURCES[(currentSourceIndex + 1) % SOURCES.length]

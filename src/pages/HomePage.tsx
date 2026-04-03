@@ -7,16 +7,11 @@ import { LazyMovieRow } from '../components/LazyMovieRow'
 import { GenreRow } from '../components/GenreRow'
 import {
   useTrending, usePopularMovies, usePopularTV, useTopRatedMovies,
-  useNowPlaying, useUpcomingMovies, useTVByGenre,
-  useActionMovies, useComedyMovies, useHorrorMovies, useSciFiMovies,
-  useThrillerMovies, useAnimationMovies, useDocumentaryMovies,
-  useRomanceMovies, useWesternMovies, useFantasyMovies, useCrimeMovies,
-  useMusicMovies, useHistoryMovies,
-  useTopRatedTV, useAiringTodayTV, useOnTheAirTV, useActionTV, useComedyTV,
-  useCrimeTV, useDocumentaryTV, useDramaTV, useMysteryTV, useAnimationTV,
-  useSciFiTV, useFamilyTV, useTalkShowTV,
+  useNowPlaying, useUpcomingMovies,
+  useActionMovies, useHorrorMovies, useSciFiMovies, useThrillerMovies,
+  useTopRatedTV, useAiringTodayTV, useDramaTV, useActionTV,
   useTrendingMovies, useTrendingTV,
-  useTopAnime, useSeasonalAnime, useTrendingAnime, useTopMangaAnime, useKidsAnime,
+  useTopAnime, useSeasonalAnime, useTrendingAnime,
 } from '../hooks/useMovies'
 import { getAllProgress } from '../hooks/useWatchProgress'
 import { getImageUrl } from '../lib/tmdb'
@@ -91,56 +86,36 @@ export const HomePage: React.FC = () => {
       <div className="relative z-10 -mt-16 pb-16">
         <ContinueWatching />
 
-        {/* ── TRENDING (eager) ── */}
+        {/* ── TRENDING ── */}
         <SL label="🔥 Trending" />
         <MovieRow title="Trending This Week"    movies={trending}      isLoading={trendingLoading} subtitle="All" lazy={false} />
-        <LazyMovieRow title="Trending Movies Today" subtitle="Movies"  useFetch={useTrendingMovies} />
-        <LazyMovieRow title="Trending TV Today"     subtitle="TV"      useFetch={useTrendingTV} />
+        <LazyMovieRow title="Trending Movies"   subtitle="Today"       useFetch={useTrendingMovies} />
+        <LazyMovieRow title="Trending TV"       subtitle="Today"       useFetch={useTrendingTV} />
 
-        {/* ── MOVIES (first 3 eager, rest lazy) ── */}
+        {/* ── MOVIES ── */}
         <SL label="🎬 Movies" />
         <MovieRow title="Now Playing"     movies={nowPlaying}    isLoading={nowPlayingLoading}    lazy={false} />
         <MovieRow title="Popular Movies"  movies={popularMovies} isLoading={popularMoviesLoading} lazy={false} />
-        <LazyMovieRow title="Top Rated Movies"   subtitle="All Time"  useFetch={useTopRatedMovies} />
+        <LazyMovieRow title="Top Rated"          subtitle="All Time"  useFetch={useTopRatedMovies} />
         <LazyMovieRow title="Coming Soon"        subtitle="Upcoming"  useFetch={useUpcomingMovies} />
-        <LazyMovieRow title="Action & Adventure"                      useFetch={useActionMovies} />
-        <LazyMovieRow title="Comedy"                                  useFetch={useComedyMovies} />
-        <LazyMovieRow title="Sci-Fi & Fantasy"                        useFetch={useSciFiMovies} />
+        <LazyMovieRow title="Action"                                  useFetch={useActionMovies} />
+        <LazyMovieRow title="Sci-Fi & Horror"                         useFetch={useSciFiMovies} />
         <LazyMovieRow title="Thrillers"                               useFetch={useThrillerMovies} />
         <LazyMovieRow title="Horror"                                  useFetch={useHorrorMovies} />
-        <LazyMovieRow title="Animation Films"                         useFetch={useAnimationMovies} />
-        <LazyMovieRow title="Romance"                                 useFetch={useRomanceMovies} />
-        <LazyMovieRow title="Crime"                                   useFetch={useCrimeMovies} />
-        <LazyMovieRow title="Fantasy"                                 useFetch={useFantasyMovies} />
-        <LazyMovieRow title="Documentary Films"                       useFetch={useDocumentaryMovies} />
-        <LazyMovieRow title="Western"                                 useFetch={useWesternMovies} />
-        <LazyMovieRow title="Music"                                   useFetch={useMusicMovies} />
-        <LazyMovieRow title="History"                                 useFetch={useHistoryMovies} />
 
-        {/* ── TV SHOWS (first 2 eager, rest lazy) ── */}
+        {/* ── TV SHOWS ── */}
         <SL label="📺 TV Shows" />
         <MovieRow title="Popular TV Shows" movies={popularTV} isLoading={popularTVLoading} lazy={false} />
-        <LazyMovieRow title="Top Rated Series"       subtitle="All Time" useFetch={useTopRatedTV} />
-        <LazyMovieRow title="Airing Today"                               useFetch={useAiringTodayTV} />
-        <LazyMovieRow title="Currently On Air"                           useFetch={useOnTheAirTV} />
-        <LazyMovieRow title="Drama Series"                               useFetch={useDramaTV} />
-        <LazyMovieRow title="Action & Adventure"                         useFetch={useActionTV} />
-        <LazyMovieRow title="Crime & Thriller"                           useFetch={useCrimeTV} />
-        <LazyMovieRow title="Mystery"                                    useFetch={useMysteryTV} />
-        <LazyMovieRow title="Comedy Shows"                               useFetch={useComedyTV} />
-        <LazyMovieRow title="Sci-Fi & Fantasy TV"                        useFetch={useSciFiTV} />
-        <LazyMovieRow title="Animation Series"                           useFetch={useAnimationTV} />
-        <LazyMovieRow title="Family"                                     useFetch={useFamilyTV} />
-        <LazyMovieRow title="Documentary Series"                         useFetch={useDocumentaryTV} />
-        <LazyMovieRow title="Talk Shows"                                 useFetch={useTalkShowTV} />
+        <LazyMovieRow title="Top Rated Series"   subtitle="All Time" useFetch={useTopRatedTV} />
+        <LazyMovieRow title="Airing Today"                           useFetch={useAiringTodayTV} />
+        <LazyMovieRow title="Drama Series"                           useFetch={useDramaTV} />
+        <LazyMovieRow title="Action & Adventure"                     useFetch={useActionTV} />
 
-        {/* ── ANIME (first row eager) ── */}
+        {/* ── ANIME ── */}
         <SL label="🎌 Anime" color="#7c3aed" />
         <MovieRow title="Top Anime" movies={toMovie(topAnime)} isLoading={animeLoading} subtitle="All Time" lazy={false} />
-        <LazyMovieRow title="Trending Anime"  subtitle="Airing"    useFetch={(e) => { const r = useTrendingAnime(e); return { data: toMovie(r.data ?? []), isLoading: r.isLoading } }} />
-        <LazyMovieRow title="This Season"     subtitle="Seasonal"  useFetch={(e) => { const r = useSeasonalAnime(e); return { data: toMovie(r.data ?? []), isLoading: r.isLoading } }} />
-        <LazyMovieRow title="Anime Movies"    subtitle="Films"     useFetch={(e) => { const r = useTopMangaAnime(e); return { data: toMovie(r.data ?? []), isLoading: r.isLoading } }} />
-        <LazyMovieRow title="Kids Anime"      subtitle="Family"    useFetch={(e) => { const r = useKidsAnime(e);     return { data: toMovie(r.data ?? []), isLoading: r.isLoading } }} />
+        <LazyMovieRow title="Trending Anime"  subtitle="Airing"   useFetch={(e) => { const r = useTrendingAnime(e); return { data: toMovie(r.data ?? []), isLoading: r.isLoading } }} />
+        <LazyMovieRow title="This Season"     subtitle="Seasonal" useFetch={(e) => { const r = useSeasonalAnime(e); return { data: toMovie(r.data ?? []), isLoading: r.isLoading } }} />
 
         {/* ── BROWSE BY GENRE ── */}
         <SL label="🎭 Browse by Genre" />
