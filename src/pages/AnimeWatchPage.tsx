@@ -5,6 +5,7 @@ import { ChevronLeft, Server, Monitor, RefreshCw, ChevronDown, AlertTriangle } f
 import { useQuery } from '@tanstack/react-query'
 import { getAnimeById } from '../lib/api'
 import { Spinner } from '../components/ui/Spinner'
+import { useSEO } from '../hooks/useSEO'
 
 interface AnimeEmbedSource {
   id: string
@@ -95,6 +96,14 @@ export const AnimeWatchPage: React.FC = () => {
 
   const title          = (anime as any)?.title_english || (anime as any)?.title || ''
   const totalEpisodes  = (anime as any)?.episodes || 24
+  const poster         = (anime as any)?.images?.jpg?.large_image_url || undefined
+
+  useSEO({
+    title:       title ? `Watch ${title} — Episode ${episode}` : 'Watch Anime',
+    description: title ? `Stream ${title} episode ${episode} free on Zyflixa.` : undefined,
+    image:       poster,
+    url:         `/watch/anime/${malId}`,
+  })
 
   const currentSource      = ANIME_SOURCES.find((s) => s.id === sourceId) ?? ANIME_SOURCES[0]
   const currentSourceIndex = ANIME_SOURCES.findIndex((s) => s.id === sourceId)

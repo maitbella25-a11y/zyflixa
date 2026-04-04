@@ -6,6 +6,7 @@ import { Play, Star, Clock, Calendar, Plus, Check, ChevronLeft, ExternalLink } f
 import { getAnimeById, getAnimeCharacters } from '../lib/api'
 import { Spinner } from '../components/ui/Spinner'
 import { useWatchlist } from '../hooks/useWatchlist'
+import { useSEO } from '../hooks/useSEO'
 
 export const AnimeDetailsPage: React.FC = () => {
   const params = useParams({ from: '/anime/$id' })
@@ -54,8 +55,15 @@ export const AnimeDetailsPage: React.FC = () => {
   const genres: { name: string }[] = (anime as any).genres || []
   const trailerUrl = (anime as any).trailer?.embed_url || (anime as any).trailer?.url
 
-  // YouTube key from embed_url
   const ytKey = trailerUrl?.match(/embed\/([^?]+)/)?.[1]
+
+  useSEO({
+    title:       year ? `${title} (${year})` : title,
+    description: synopsis ? synopsis.slice(0, 160) : `Watch ${title} anime free on Zyflixa.`,
+    image:       poster || undefined,
+    url:         `/anime/${id}`,
+    type:        'video.tv_show',
+  })
 
   return (
     <div className="min-h-screen bg-[#141414]">
