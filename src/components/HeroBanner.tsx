@@ -63,6 +63,10 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ movies, isLoading }) => 
             src={backdropUrl}
             alt={title}
             onLoad={() => setImageLoaded(true)}
+            loading={currentIndex === 0 ? 'eager' : 'lazy'}
+            fetchPriority={currentIndex === 0 ? 'high' : 'auto'}
+            width={1280}
+            height={720}
             className={`w-full h-full object-cover object-center transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           />
         </motion.div>

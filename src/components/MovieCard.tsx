@@ -1,6 +1,5 @@
 import React, { useState, memo } from 'react'
 import { Link } from '@tanstack/react-router'
-import { motion } from 'framer-motion'
 import { Star, Play, Plus, Check, Tv } from 'lucide-react'
 import { getImageUrl } from '../lib/tmdb'
 import { useWatchlist } from '../hooks/useWatchlist'
@@ -47,11 +46,12 @@ export const MovieCard: React.FC<MovieCardProps> = memo(({ movie, index = 0 }) =
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: Math.min(index * 0.04, 0.5) }}
+    <div
       className="flex-shrink-0 w-[140px] xs:w-[150px] sm:w-[160px] md:w-[180px] lg:w-[195px] group cursor-pointer"
+      style={{
+        animation: `fadeInUp 0.3s ease both`,
+        animationDelay: `${Math.min(index * 0.04, 0.5)}s`,
+      }}
     >
       <Link
         to={isAnime ? '/anime/$id' : '/details/$mediaType/$id'}
@@ -147,7 +147,7 @@ export const MovieCard: React.FC<MovieCardProps> = memo(({ movie, index = 0 }) =
           </div>
         </div>
       </Link>
-    </motion.div>
+    </div>
   )
 })
 
