@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Play, Info, Star } from 'lucide-react'
-import { getBackdropUrl } from '../lib/tmdb'
+import { getBackdropUrl, getBackdropSrcSet } from '../lib/tmdb'
 import type { Movie } from '../lib/tmdb'
 
 interface HeroBannerProps {
@@ -46,7 +46,8 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ movies, isLoading }) => 
   const title = featured.title || featured.name || ''
   const mediaType = featured.media_type || (featured.title ? 'movie' : 'tv')
   const year = (featured.release_date || featured.first_air_date || '').slice(0, 4)
-  const backdropUrl = getBackdropUrl(featured.backdrop_path)
+  const backdropUrl    = getBackdropUrl(featured.backdrop_path, 'w1280')
+  const backdropSrcSet = getBackdropSrcSet(featured.backdrop_path)
 
   return (
     <div className="relative w-full h-[56vw] min-h-[400px] max-h-[700px] overflow-hidden bg-zinc-900">
@@ -61,6 +62,8 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ movies, isLoading }) => 
         >
           <img
             src={backdropUrl}
+            srcSet={backdropSrcSet}
+            sizes="100vw"
             alt={title}
             onLoad={() => setImageLoaded(true)}
             loading={currentIndex === 0 ? 'eager' : 'lazy'}

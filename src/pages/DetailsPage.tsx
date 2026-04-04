@@ -3,7 +3,7 @@ import { useParams, Link } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { Play, Star, Clock, Calendar, Plus, Check, ChevronLeft, ExternalLink, Server } from 'lucide-react'
 import { useMovieDetails, useTVDetails } from '../hooks/useMovies'
-import { getImageUrl, getBackdropUrl } from '../lib/tmdb'
+import { getImageUrl, getBackdropUrl, getBackdropSrcSet } from '../lib/tmdb'
 import { Spinner } from '../components/ui/Spinner'
 import { MovieRow } from '../components/MovieRow'
 import { useWatchlist } from '../hooks/useWatchlist'
@@ -18,7 +18,10 @@ const CastCard: React.FC<{ cast: Cast }> = ({ cast }) => (
         <img
           src={getImageUrl(cast.profile_path, 'w185')}
           alt={cast.name}
+          width={185}
+          height={185}
           loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover"
         />
       ) : (
@@ -83,8 +86,9 @@ export const DetailsPage: React.FC = () => {
     ...m,
     media_type: m.media_type || mediaType,
   }))
-  const backdropUrl = getBackdropUrl(details.backdrop_path)
-  const posterUrl = getImageUrl(details.poster_path, 'w500')
+  const backdropUrl    = getBackdropUrl(details.backdrop_path, 'w1280')
+  const backdropSrcSet = getBackdropSrcSet(details.backdrop_path)
+  const posterUrl      = getImageUrl(details.poster_path, 'w342')
 
   return (
     <div className="min-h-screen bg-[#141414]">
@@ -94,9 +98,14 @@ export const DetailsPage: React.FC = () => {
         <div className="relative w-full h-[45vw] min-h-[260px] max-h-[520px] overflow-hidden">
           <img
             src={backdropUrl}
+            srcSet={backdropSrcSet}
+            sizes="100vw"
             alt={title}
+            width={1280}
+            height={720}
             className="w-full h-full object-cover object-top"
             loading="eager"
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#141414] via-[#141414]/50 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/20 to-transparent" />
@@ -125,6 +134,8 @@ export const DetailsPage: React.FC = () => {
             <img
               src={posterUrl}
               alt={title}
+              width={342}
+              height={513}
               className="w-full aspect-[2/3] rounded-xl object-cover shadow-2xl ring-1 ring-white/10"
               loading="lazy"
             />

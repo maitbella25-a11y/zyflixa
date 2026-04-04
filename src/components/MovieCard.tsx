@@ -63,6 +63,8 @@ export const MovieCard: React.FC<MovieCardProps> = memo(({ movie, index = 0 }) =
             <img
               src={posterUrl}
               alt={title}
+              width={342}
+              height={513}
               loading="lazy"
               decoding="async"
               onLoad={() => setImageLoaded(true)}

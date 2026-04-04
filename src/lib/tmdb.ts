@@ -5,14 +5,28 @@ export const TMDB_CONFIG = {
   API_KEY: '4f5f43495afcc67e9553f6c684a82f84',
 }
 
+const PLACEHOLDER_POSTER = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='450' viewBox='0 0 300 450'%3E%3Crect width='300' height='450' fill='%2327272a'/%3E%3Crect x='110' y='185' width='80' height='60' rx='4' fill='%2352525b'/%3E%3Ctext x='150' y='270' text-anchor='middle' fill='%2371717a' font-size='12' font-family='sans-serif'%3ENo Image%3C/text%3E%3C/svg%3E`
+const PLACEHOLDER_BACKDROP = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1280' height='720' viewBox='0 0 1280 720'%3E%3Crect width='1280' height='720' fill='%2318181b'/%3E%3C/svg%3E`
+
 export const getImageUrl = (path: string | null, size: string = 'w500'): string => {
-  if (!path) return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='450' viewBox='0 0 300 450'%3E%3Crect width='300' height='450' fill='%2327272a'/%3E%3Crect x='110' y='185' width='80' height='60' rx='4' fill='%2352525b'/%3E%3Ctext x='150' y='270' text-anchor='middle' fill='%2371717a' font-size='12' font-family='sans-serif'%3ENo Image%3C/text%3E%3C/svg%3E`
+  if (!path) return PLACEHOLDER_POSTER
   return `${TMDB_CONFIG.IMAGE_BASE}/${size}${path}`
 }
 
-export const getBackdropUrl = (path: string | null): string => {
-  if (!path) return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1280' height='720' viewBox='0 0 1280 720'%3E%3Crect width='1280' height='720' fill='%2318181b'/%3E%3C/svg%3E`
-  return `${TMDB_CONFIG.IMAGE_BASE}/original${path}`
+// Returns the right backdrop size based on screen — w780 mobile, w1280 desktop
+// Never use /original (3-5MB per image!)
+export const getBackdropUrl = (path: string | null, size: 'w780' | 'w1280' = 'w1280'): string => {
+  if (!path) return PLACEHOLDER_BACKDROP
+  return `${TMDB_CONFIG.IMAGE_BASE}/${size}${path}`
+}
+
+// srcset string for responsive backdrops — browser picks the right size automatically
+export const getBackdropSrcSet = (path: string | null): string => {
+  if (!path) return ''
+  return [
+    `${TMDB_CONFIG.IMAGE_BASE}/w780${path} 780w`,
+    `${TMDB_CONFIG.IMAGE_BASE}/w1280${path} 1280w`,
+  ].join(', ')
 }
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
