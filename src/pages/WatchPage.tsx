@@ -5,6 +5,8 @@ import { ChevronLeft, Server, Monitor, RefreshCw, ChevronDown, AlertTriangle } f
 import { useMovieDetails, useTVDetails } from '../hooks/useMovies'
 import { Spinner } from '../components/ui/Spinner'
 import { rankServers, recordSuccess, recordFailure } from '../hooks/useServerRanking'
+import { useSEO } from '../hooks/useSEO'
+import { getBackdropUrl } from '../lib/tmdb'
 
 interface EmbedSource {
   id: string
@@ -157,6 +159,19 @@ export const WatchPage: React.FC = () => {
   const totalSeasons      = (details as any)?.number_of_seasons ?? 1
   const totalEpisodes     = (details as any)?.number_of_episodes ?? 50
   const episodesPerSeason = Math.max(13, Math.ceil(totalEpisodes / Math.max(totalSeasons, 1)))
+
+  const seoTitle = mediaType === 'tv' && title
+    ? `Watch ${title} S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`
+    : title ? `Watch ${title}` : 'Watch'
+
+  useSEO({
+    title:       seoTitle,
+    description: title ? `Stream ${title} free on Zyflixa.` : undefined,
+    image:       (details as any)?.backdrop_path
+                   ? getBackdropUrl((details as any).backdrop_path, 'w1280')
+                   : undefined,
+    url:         `/watch/${mediaType}/${id}`,
+  })
 
   const currentSource      = rankedSources.find((s) => s.id === sourceId) ?? rankedSources[0]
   const embedUrl           = currentSource.getUrl(mediaType, id, season, episode)

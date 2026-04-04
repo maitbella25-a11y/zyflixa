@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Block watch pages from indexing (duplicate content, iframes)
+Disallow: /watch/
+
+Sitemap: https://zyflixa.eu.cc/sitemap.xml

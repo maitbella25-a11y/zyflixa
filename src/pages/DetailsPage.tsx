@@ -7,6 +7,7 @@ import { getImageUrl, getBackdropUrl, getBackdropSrcSet } from '../lib/tmdb'
 import { Spinner } from '../components/ui/Spinner'
 import { MovieRow } from '../components/MovieRow'
 import { useWatchlist } from '../hooks/useWatchlist'
+import { useSEO } from '../hooks/useSEO'
 import type { MovieDetails, TVDetails, Cast, Video } from '../lib/tmdb'
 
 type DetailsData = MovieDetails | TVDetails
@@ -18,10 +19,7 @@ const CastCard: React.FC<{ cast: Cast }> = ({ cast }) => (
         <img
           src={getImageUrl(cast.profile_path, 'w185')}
           alt={cast.name}
-          width={185}
-          height={185}
           loading="lazy"
-          decoding="async"
           className="w-full h-full object-cover"
         />
       ) : (
@@ -89,6 +87,19 @@ export const DetailsPage: React.FC = () => {
   const backdropUrl    = getBackdropUrl(details.backdrop_path, 'w1280')
   const backdropSrcSet = getBackdropSrcSet(details.backdrop_path)
   const posterUrl      = getImageUrl(details.poster_path, 'w342')
+  const seoImage       = getBackdropUrl(details.backdrop_path, 'w1280')
+  const seoDesc        = details.overview
+    ? details.overview.slice(0, 160)
+    : `Watch ${title} on Zyflixa — stream free movies and TV shows.`
+
+  // ── SEO ──────────────────────────────────────────────────────────────────
+  useSEO({
+    title:       year ? `${title} (${year})` : title,
+    description: seoDesc,
+    image:       seoImage,
+    url:         `/details/${mediaType}/${id}`,
+    type:        mediaType === 'movie' ? 'video.movie' : 'video.tv_show',
+  })
 
   return (
     <div className="min-h-screen bg-[#141414]">
@@ -134,8 +145,6 @@ export const DetailsPage: React.FC = () => {
             <img
               src={posterUrl}
               alt={title}
-              width={342}
-              height={513}
               className="w-full aspect-[2/3] rounded-xl object-cover shadow-2xl ring-1 ring-white/10"
               loading="lazy"
             />
