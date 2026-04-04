@@ -55,7 +55,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ movies, isLoading }) => 
         <motion.div
           key={featured.id}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          animate={{ opacity: imageLoaded ? 1 : 0 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8 }}
           className="absolute inset-0"
@@ -70,7 +70,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ movies, isLoading }) => 
             fetchPriority={currentIndex === 0 ? 'high' : 'auto'}
             width={1280}
             height={720}
-            className={`w-full h-full object-cover object-center transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            className="w-full h-full object-cover object-center"
           />
         </motion.div>
       </AnimatePresence>
