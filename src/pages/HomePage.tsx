@@ -17,7 +17,6 @@ import { getAllProgress } from '../hooks/useWatchProgress'
 import { getImageUrl } from '../lib/tmdb'
 import type { Movie } from '../lib/tmdb'
 import type { AnimeEntry } from '../lib/api'
-import { AdBanner300x250, AdNativeBanner } from '../components/AdBanner'
 
 // ─── Continue Watching ────────────────────────────────────────────────────────
 const ContinueWatching: React.FC = () => {
@@ -83,11 +82,9 @@ export const HomePage: React.FC = () => {
   return (
     <main className="min-h-screen bg-[#141414]">
       <HeroBanner movies={trending.filter((m) => m.backdrop_path)} isLoading={trendingLoading} />
-      <AdNativeBanner />
 
       <div className="relative z-10 -mt-16 pb-16">
         <ContinueWatching />
-      <AdBanner300x250 />
 
         {/* ── TRENDING ── */}
         <SL label="🔥 Trending" />
