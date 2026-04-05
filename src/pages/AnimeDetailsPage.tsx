@@ -28,6 +28,21 @@ export const AnimeDetailsPage: React.FC = () => {
     staleTime: 30 * 60 * 1000,
   })
 
+  // Derive values early so useSEO can be called before early returns (Rules of Hooks)
+  const title = (anime as any)?.title_english || (anime as any)?.title || ''
+  const poster = (anime as any)?.images?.jpg?.large_image_url || (anime as any)?.poster_path || ''
+  const synopsis = (anime as any)?.synopsis || (anime as any)?.overview || ''
+  const year = (anime as any)?.year || ((anime as any)?.release_date || '').slice(0, 4)
+
+  // useSEO MUST be called before any early return (Rules of Hooks)
+  useSEO({
+    title:       year ? `${title} (${year})` : title || undefined,
+    description: synopsis ? synopsis.slice(0, 160) : `Watch ${title} anime free on Zyflixa.`,
+    image:       poster || undefined,
+    url:         `/anime/${id}`,
+    type:        'video.tv_show',
+  })
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#141414] flex items-center justify-center">
@@ -45,25 +60,13 @@ export const AnimeDetailsPage: React.FC = () => {
     )
   }
 
-  const title = (anime as any).title_english || (anime as any).title || ''
-  const poster = (anime as any).images?.jpg?.large_image_url || (anime as any).poster_path || ''
-  const synopsis = (anime as any).synopsis || (anime as any).overview || ''
   const score = (anime as any).score || (anime as any).vote_average || 0
-  const year = (anime as any).year || ((anime as any).release_date || '').slice(0, 4)
   const episodes = (anime as any).episodes
   const status = (anime as any).status
   const genres: { name: string }[] = (anime as any).genres || []
   const trailerUrl = (anime as any).trailer?.embed_url || (anime as any).trailer?.url
 
   const ytKey = trailerUrl?.match(/embed\/([^?]+)/)?.[1]
-
-  useSEO({
-    title:       year ? `${title} (${year})` : title,
-    description: synopsis ? synopsis.slice(0, 160) : `Watch ${title} anime free on Zyflixa.`,
-    image:       poster || undefined,
-    url:         `/anime/${id}`,
-    type:        'video.tv_show',
-  })
 
   return (
     <div className="min-h-screen bg-[#141414]">

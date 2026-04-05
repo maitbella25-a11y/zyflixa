@@ -50,6 +50,28 @@ export const DetailsPage: React.FC = () => {
     mediaType === 'movie' ? (movieData || null) : (tvData || null)
   const isLoading = mediaType === 'movie' ? movieLoading : tvLoading
 
+  // ── Derive values early (safe when details is null) ──────────────────────
+  const title =
+    (details as { title?: string; name?: string } | null)?.title ||
+    (details as { name?: string } | null)?.name || ''
+  const year = (
+    (details as { release_date?: string; first_air_date?: string } | null)?.release_date ||
+    (details as { first_air_date?: string } | null)?.first_air_date || ''
+  ).slice(0, 4)
+  const seoImage = details ? getBackdropUrl(details.backdrop_path, 'w1280') : undefined
+  const seoDesc  = details?.overview
+    ? details.overview.slice(0, 160)
+    : `Watch ${title} on Zyflixa — stream free movies and TV shows.`
+
+  // ── useSEO BEFORE any early return (Rules of Hooks) ──────────────────────
+  useSEO({
+    title:       year ? `${title} (${year})` : title || undefined,
+    description: seoDesc,
+    image:       seoImage,
+    url:         `/details/${mediaType}/${id}`,
+    type:        mediaType === 'movie' ? 'video.movie' : 'video.tv_show',
+  })
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#141414] flex items-center justify-center">
@@ -67,13 +89,6 @@ export const DetailsPage: React.FC = () => {
     )
   }
 
-  const title =
-    (details as { title?: string; name?: string }).title ||
-    (details as { name?: string }).name || ''
-  const year = (
-    (details as { release_date?: string; first_air_date?: string }).release_date ||
-    (details as { first_air_date?: string }).first_air_date || ''
-  ).slice(0, 4)
   const runtime = (details as { runtime?: number }).runtime
   const seasons = (details as { number_of_seasons?: number }).number_of_seasons
   const trailerVideo: Video | undefined =
@@ -87,19 +102,6 @@ export const DetailsPage: React.FC = () => {
   const backdropUrl    = getBackdropUrl(details.backdrop_path, 'w1280')
   const backdropSrcSet = getBackdropSrcSet(details.backdrop_path)
   const posterUrl      = getImageUrl(details.poster_path, 'w342')
-  const seoImage       = getBackdropUrl(details.backdrop_path, 'w1280')
-  const seoDesc        = details.overview
-    ? details.overview.slice(0, 160)
-    : `Watch ${title} on Zyflixa — stream free movies and TV shows.`
-
-  // ── SEO ──────────────────────────────────────────────────────────────────
-  useSEO({
-    title:       year ? `${title} (${year})` : title,
-    description: seoDesc,
-    image:       seoImage,
-    url:         `/details/${mediaType}/${id}`,
-    type:        mediaType === 'movie' ? 'video.movie' : 'video.tv_show',
-  })
 
   return (
     <div className="min-h-screen bg-[#141414]">
