@@ -8,6 +8,7 @@ import { Spinner } from '../components/ui/Spinner'
 import { MovieRow } from '../components/MovieRow'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { useSEO } from '../hooks/useSEO'
+import { AdBanner300x250 } from '../components/AdBanner'
 import type { MovieDetails, TVDetails, Cast, Video } from '../lib/tmdb'
 
 type DetailsData = MovieDetails | TVDetails
@@ -268,6 +269,9 @@ export const DetailsPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* ── Ad ── */}
+        <AdBanner300x250 />
 
         {/* ── Similar ── */}
         {similar.length > 0 && (
