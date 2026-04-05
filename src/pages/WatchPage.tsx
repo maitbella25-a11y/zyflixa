@@ -206,11 +206,19 @@ export const WatchPage: React.FC = () => {
     setLoadError(false)
   }, [currentSourceIndex, rankedSources, sourceId])
 
-  // Show/hide overlay on mouse move
+  // Show overlay on mouse move, hide after 3s of inactivity
   const handleMouseMove = useCallback(() => {
     setShowOverlay(true)
     if (hideTimer.current) clearTimeout(hideTimer.current)
     hideTimer.current = setTimeout(() => setShowOverlay(false), 3000)
+  }, [])
+
+  // Toggle overlay only on explicit click — NOT when iframe regains focus after pause
+  const handleContainerClick = useCallback((e: React.MouseEvent) => {
+    // Only toggle if the click target is the container itself (not iframe or child)
+    if (e.target === e.currentTarget) {
+      setShowOverlay((v) => !v)
+    }
   }, [])
 
   useEffect(() => {
@@ -232,7 +240,7 @@ export const WatchPage: React.FC = () => {
     <div
       className="fixed inset-0 z-[100] bg-black flex flex-col"
       onMouseMove={handleMouseMove}
-      onClick={() => setShowOverlay((v) => !v)}
+      onClick={handleContainerClick}
     >
       {/* ── iframe ── */}
       {!iframeLoaded && (

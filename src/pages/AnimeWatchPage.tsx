@@ -142,6 +142,12 @@ export const AnimeWatchPage: React.FC = () => {
     hideTimer.current = setTimeout(() => setShowOverlay(false), 3000)
   }, [])
 
+  const handleContainerClick = useCallback((e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      setShowOverlay((v) => !v)
+    }
+  }, [])
+
   useEffect(() => () => {
     if (hideTimer.current)  clearTimeout(hideTimer.current)
     if (errorTimer.current) clearTimeout(errorTimer.current)
@@ -159,7 +165,7 @@ export const AnimeWatchPage: React.FC = () => {
     <div
       className="fixed inset-0 z-[100] bg-black flex flex-col"
       onMouseMove={handleMouseMove}
-      onClick={() => setShowOverlay((v) => !v)}
+      onClick={handleContainerClick}
     >
       {/* Loading overlay */}
       {!iframeLoaded && (
