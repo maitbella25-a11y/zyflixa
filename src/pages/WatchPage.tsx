@@ -1,31 +1,43 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, Server, Monitor, RefreshCw, ChevronDown, AlertTriangle } from 'lucide-react'
+import { ChevronLeft, Server, Monitor, RefreshCw, ChevronDown, Zap } from 'lucide-react'
 import { useMovieDetails, useTVDetails } from '../hooks/useMovies'
 import { Spinner } from '../components/ui/Spinner'
-import { rankServers, recordSuccess, recordFailure } from '../hooks/useServerRanking'
+import { recordSuccess, recordFailure } from '../hooks/useServerRanking'
 import { useSEO } from '../hooks/useSEO'
 import { getBackdropUrl } from '../lib/tmdb'
 
 interface EmbedSource {
   id: string
   label: string
+  arabic?: boolean
   getUrl: (type: 'movie' | 'tv', id: number, season?: number, episode?: number) => string
 }
 
 const SOURCES: EmbedSource[] = [
   {
-    id: 'vidsrc-me',
-    label: 'VidSrc',
+    id: 'videasy',
+    label: 'Videasy',
+    arabic: true,
     getUrl: (t, id, s, e) =>
       t === 'movie'
-        ? `https://vidsrc.me/embed/movie?tmdb=${id}`
-        : `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s ?? 1}&episode=${e ?? 1}`,
+        ? `https://player.videasy.net/movie/${id}`
+        : `https://player.videasy.net/tv/${id}/${s ?? 1}/${e ?? 1}`,
+  },
+  {
+    id: 'vidsrc-cc',
+    label: 'VidSrc CC',
+    arabic: true,
+    getUrl: (t, id, s, e) =>
+      t === 'movie'
+        ? `https://vidsrc.cc/v2/embed/movie/${id}`
+        : `https://vidsrc.cc/v2/embed/tv/${id}/${s ?? 1}/${e ?? 1}`,
   },
   {
     id: 'embedsu',
     label: 'EmbedSu',
+    arabic: true,
     getUrl: (t, id, s, e) =>
       t === 'movie'
         ? `https://embed.su/embed/movie/${id}`
@@ -38,62 +50,6 @@ const SOURCES: EmbedSource[] = [
       t === 'movie'
         ? `https://vidlink.pro/movie/${id}?autoplay=true`
         : `https://vidlink.pro/tv/${id}/${s ?? 1}/${e ?? 1}?autoplay=true`,
-  },
-  {
-    id: 'videasy',
-    label: 'Videasy',
-    getUrl: (t, id, s, e) =>
-      t === 'movie'
-        ? `https://player.videasy.net/movie/${id}`
-        : `https://player.videasy.net/tv/${id}/${s ?? 1}/${e ?? 1}`,
-  },
-  {
-    id: 'vidsrc-cc',
-    label: 'VidSrc CC',
-    getUrl: (t, id, s, e) =>
-      t === 'movie'
-        ? `https://vidsrc.cc/v2/embed/movie/${id}`
-        : `https://vidsrc.cc/v2/embed/tv/${id}/${s ?? 1}/${e ?? 1}`,
-  },
-  {
-    id: 'vidfast',
-    label: 'VidFast',
-    getUrl: (t, id, s, e) =>
-      t === 'movie'
-        ? `https://vidfast.pro/movie/${id}?autoPlay=true`
-        : `https://vidfast.pro/tv/${id}/${s ?? 1}/${e ?? 1}?autoPlay=true`,
-  },
-  {
-    id: 'autoembed',
-    label: 'AutoEmbed',
-    getUrl: (t, id, s, e) =>
-      t === 'movie'
-        ? `https://autoembed.cc/movie/tmdb/${id}`
-        : `https://autoembed.cc/tv/tmdb/${id}-${s ?? 1}-${e ?? 1}`,
-  },
-  {
-    id: 'superembed',
-    label: 'SuperEmbed',
-    getUrl: (t, id, s, e) =>
-      t === 'movie'
-        ? `https://www.superembed.stream/embed/movie/${id}`
-        : `https://www.superembed.stream/embed/tv/${id}/${s ?? 1}/${e ?? 1}`,
-  },
-  {
-    id: 'multiembed',
-    label: 'MultiEmbed',
-    getUrl: (t, id, s, e) =>
-      t === 'movie'
-        ? `https://multiembed.mov/?video_id=${id}&tmdb=1`
-        : `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s ?? 1}&e=${e ?? 1}`,
-  },
-  {
-    id: '2embed',
-    label: '2Embed',
-    getUrl: (t, id, s, e) =>
-      t === 'movie'
-        ? `https://www.2embed.cc/embed/${id}`
-        : `https://www.2embed.cc/embedtv/${id}&s=${s ?? 1}&e=${e ?? 1}`,
   },
   {
     id: 'vidsrc-pro',
@@ -112,24 +68,26 @@ const SOURCES: EmbedSource[] = [
         : `https://vidsrc.xyz/embed/tv/${id}/${s ?? 1}/${e ?? 1}`,
   },
   {
-    id: 'rivestream',
-    label: 'RiveStream',
+    id: 'vidfast',
+    label: 'VidFast',
     getUrl: (t, id, s, e) =>
       t === 'movie'
-        ? `https://rivestream.org/embed?type=movie&id=${id}`
-        : `https://rivestream.org/embed?type=tv&id=${id}&season=${s ?? 1}&episode=${e ?? 1}`,
+        ? `https://vidfast.pro/movie/${id}?autoPlay=true`
+        : `https://vidfast.pro/tv/${id}/${s ?? 1}/${e ?? 1}?autoPlay=true`,
   },
   {
-    id: 'nontonfilm',
-    label: 'NontonFilm',
+    id: 'autoembed',
+    label: 'AutoEmbed',
+    arabic: true,
     getUrl: (t, id, s, e) =>
       t === 'movie'
-        ? `https://www.NontonFilm.net/api/?tmdb=${id}&type=movie`
-        : `https://www.NontonFilm.net/api/?tmdb=${id}&type=serie&s=${s ?? 1}&e=${e ?? 1}`,
+        ? `https://autoembed.cc/movie/tmdb/${id}`
+        : `https://autoembed.cc/tv/tmdb/${id}-${s ?? 1}-${e ?? 1}`,
   },
   {
     id: 'zyflixa',
     label: 'Zyflixa',
+    arabic: true,
     getUrl: (t, id, s, e) =>
       t === 'movie'
         ? `https://zyflixa.eu.cc/embed/movie/${id}`
@@ -137,36 +95,95 @@ const SOURCES: EmbedSource[] = [
   },
 ]
 
+// sandbox attribute يمنع فتح نوافذ popup من السيرفر
+const IFRAME_SANDBOX = 'allow-scripts allow-same-origin allow-forms allow-presentation allow-fullscreen'
+
 export const WatchPage: React.FC = () => {
   const params    = useParams({ from: '/watch/$mediaType/$id' })
   const mediaType = params.mediaType as 'movie' | 'tv'
   const id        = parseInt(params.id, 10)
 
-  // Sort servers by historical success score — best first
-  const rankedSources = useMemo(() => rankServers(SOURCES), [])
-
-  const [sourceId, setSourceId]         = useState(rankedSources[0].id)
-  const [season, setSeason]             = useState(1)
-  const [episode, setEpisode]           = useState(1)
-  const [iframeKey, setIframeKey]       = useState(0)
-  const [iframeLoaded, setIframeLoaded] = useState(false)
-  const [showOverlay, setShowOverlay]   = useState(true)
-  const [showSources, setShowSources]   = useState(false)
-  const [showEpisodes, setShowEpisodes] = useState(false)
-  const [loadError, setLoadError]       = useState(false)
-  const [autoFallback, setAutoFallback] = useState(false)
-  const hideTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [season, setSeason]               = useState(1)
+  const [episode, setEpisode]             = useState(1)
+  const [iframeKey, setIframeKey]         = useState(0)
+  const [raceKey, setRaceKey]             = useState(0)
+  const [winnerId, setWinnerId]           = useState<string | null>(null)
+  const [racing, setRacing]               = useState(true)
+  const [manualSourceId, setManualSourceId] = useState<string | null>(null)
+  const [showOverlay, setShowOverlay]     = useState(true)
+  const [showSources, setShowSources]     = useState(false)
+  const [showEpisodes, setShowEpisodes]   = useState(false)
+  const hideTimer   = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const winnerSet   = useRef(false)
+  const iframeRef   = useRef<HTMLIFrameElement>(null)
 
   const { data: movieData, isLoading: movieLoading } = useMovieDetails(mediaType === 'movie' ? id : 0)
   const { data: tvData,    isLoading: tvLoading }    = useTVDetails(mediaType === 'tv' ? id : 0)
 
-  const details    = mediaType === 'movie' ? movieData : tvData
-  const isLoading  = mediaType === 'movie' ? movieLoading : tvLoading
-  const title      = (details as any)?.title || (details as any)?.name || ''
+  const details           = mediaType === 'movie' ? movieData : tvData
+  const isLoading         = mediaType === 'movie' ? movieLoading : tvLoading
+  const title             = (details as any)?.title || (details as any)?.name || ''
   const totalSeasons      = (details as any)?.number_of_seasons ?? 1
   const totalEpisodes     = (details as any)?.number_of_episodes ?? 50
   const episodesPerSeason = Math.max(13, Math.ceil(totalEpisodes / Math.max(totalSeasons, 1)))
+
+  // السيرفرات: العربية أولاً
+  const sortedSources = useMemo(() =>
+    [...SOURCES].sort((a, b) => (b.arabic ? 1 : 0) - (a.arabic ? 1 : 0)),
+    []
+  )
+
+  // ── Race: يطلق كل السيرفرات في نفس الوقت ويختار الأول الذي يستجيب ──────────
+  useEffect(() => {
+    setWinnerId(null)
+    setRacing(true)
+    winnerSet.current = false
+
+    const iframes: HTMLIFrameElement[] = []
+
+    const cleanup = () => {
+      iframes.forEach((f) => {
+        try { document.body.removeChild(f) } catch {}
+      })
+      clearTimeout(fallback)
+    }
+
+    sortedSources.forEach((src) => {
+      const iframe = document.createElement('iframe')
+      iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;'
+      iframe.src = src.getUrl(mediaType, id, season, episode)
+      iframe.sandbox.value = IFRAME_SANDBOX
+      document.body.appendChild(iframe)
+      iframes.push(iframe)
+
+      iframe.onload = () => {
+        if (!winnerSet.current) {
+          winnerSet.current = true
+          setWinnerId(src.id)
+          setRacing(false)
+          recordSuccess(src.id)
+          cleanup()
+        }
+      }
+    })
+
+    // fallback بعد 8 ثواني
+    const fallback = setTimeout(() => {
+      if (!winnerSet.current) {
+        winnerSet.current = true
+        setWinnerId(sortedSources[0].id)
+        setRacing(false)
+        recordFailure(sortedSources[0].id)
+        cleanup()
+      }
+    }, 8000)
+
+    return cleanup
+  }, [raceKey, mediaType, id, season, episode])
+
+  const activeId     = manualSourceId ?? winnerId ?? sortedSources[0].id
+  const activeSource = sortedSources.find((s) => s.id === activeId) ?? sortedSources[0]
+  const embedUrl     = activeSource.getUrl(mediaType, id, season, episode)
 
   const seoTitle = mediaType === 'tv' && title
     ? `Watch ${title} S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`
@@ -181,59 +198,26 @@ export const WatchPage: React.FC = () => {
     url:         `/watch/${mediaType}/${id}`,
   })
 
-  const currentSource      = rankedSources.find((s) => s.id === sourceId) ?? rankedSources[0]
-  const embedUrl           = currentSource.getUrl(mediaType, id, season, episode)
-  const currentSourceIndex = rankedSources.findIndex((s) => s.id === sourceId)
+  const handleIframeLoad = useCallback(() => {
+    recordSuccess(activeId)
+  }, [activeId])
 
-  // Auto-fallback: after 10s with no load → record failure + silently switch
-  useEffect(() => {
-    setIframeLoaded(false)
-    setLoadError(false)
-    setAutoFallback(false)
-    if (errorTimer.current) clearTimeout(errorTimer.current)
-    errorTimer.current = setTimeout(() => {
-      recordFailure(sourceId)
-      const next = (currentSourceIndex + 1) % rankedSources.length
-      if (next !== 0) {
-        setSourceId(rankedSources[next].id)
-        setIframeKey((k) => k + 1)
-        setAutoFallback(true)
-      } else {
-        setLoadError(true)
-      }
-    }, 10000)
-    return () => { if (errorTimer.current) clearTimeout(errorTimer.current) }
-  }, [iframeKey, sourceId, currentSourceIndex, rankedSources])
-
-  const tryNextSource = useCallback(() => {
-    recordFailure(sourceId)
-    const next = rankedSources[(currentSourceIndex + 1) % rankedSources.length]
-    setSourceId(next.id)
-    setIframeKey((k) => k + 1)
-    setAutoFallback(true)
-    setLoadError(false)
-  }, [currentSourceIndex, rankedSources, sourceId])
-
-  // Show overlay on mouse move, hide after 3s of inactivity
   const handleMouseMove = useCallback(() => {
     setShowOverlay(true)
     if (hideTimer.current) clearTimeout(hideTimer.current)
     hideTimer.current = setTimeout(() => setShowOverlay(false), 3000)
   }, [])
 
-  // Toggle overlay only on explicit click — NOT when iframe regains focus after pause
   const handleContainerClick = useCallback((e: React.MouseEvent) => {
-    // Only toggle if the click target is the container itself (not iframe or child)
-    if (e.target === e.currentTarget) {
-      setShowOverlay((v) => !v)
-    }
+    if (e.target === e.currentTarget) setShowOverlay((v) => !v)
   }, [])
 
-  useEffect(() => {
-    return () => {
-      if (hideTimer.current) clearTimeout(hideTimer.current)
-      if (errorTimer.current) clearTimeout(errorTimer.current)
-    }
+  useEffect(() => () => { if (hideTimer.current) clearTimeout(hideTimer.current) }, [])
+
+  const reload = useCallback(() => {
+    setManualSourceId(null)
+    setRaceKey((k) => k + 1)
+    setIframeKey((k) => k + 1)
   }, [])
 
   if (isLoading) {
@@ -250,56 +234,44 @@ export const WatchPage: React.FC = () => {
       onMouseMove={handleMouseMove}
       onClick={handleContainerClick}
     >
-      {/* ── iframe ── */}
-      {!iframeLoaded && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black gap-4">
-          <Spinner size="lg" />
-          <p className="text-zinc-400 text-sm">Loading {currentSource.label}...</p>
-        </div>
-      )}
-
-      <iframe
-        key={iframeKey}
-        src={embedUrl}
-        className="w-full h-full border-0"
-        allowFullScreen
-        allow="autoplay; fullscreen; picture-in-picture"
-        onLoad={() => {
-          setIframeLoaded(true)
-          setLoadError(false)
-          recordSuccess(sourceId)
-          if (errorTimer.current) clearTimeout(errorTimer.current)
-        }}
-      />
-
-      {/* ── Load error banner ── */}
+      {/* ── Racing overlay ── */}
       <AnimatePresence>
-        {loadError && (
+        {racing && !manualSourceId && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 bg-zinc-900/95 border border-zinc-700 rounded-xl px-5 py-4 flex items-center gap-4 shadow-2xl max-w-sm w-full mx-4"
-            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black gap-4"
           >
-            <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-medium">
-                {autoFallback ? `Switched to ${currentSource.label}` : `${currentSource.label} not responding`}
-              </p>
-              <p className="text-zinc-400 text-xs mt-0.5">
-                {autoFallback ? 'Try another server if this one fails too' : 'Try another server below'}
-              </p>
+            <Spinner size="lg" />
+            <div className="flex items-center gap-2 text-zinc-400 text-sm">
+              <Zap className="w-4 h-4 text-yellow-400 animate-pulse" />
+              <span>جارٍ اختيار أسرع سيرفر...</span>
             </div>
-            <button
-              onClick={tryNextSource}
-              className="flex-shrink-0 bg-[#E50914] text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-[#E50914]/80 transition-colors"
-            >
-              Next Server
-            </button>
+            <div className="flex gap-1.5 flex-wrap justify-center max-w-xs px-4">
+              {sortedSources.map((src) => (
+                <span key={src.id} className="text-xs text-zinc-600 bg-zinc-900 px-2 py-0.5 rounded-full animate-pulse">
+                  {src.label}{src.arabic ? ' 🇦🇪' : ''}
+                </span>
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── iframe — sandbox يمنع الـ popups ── */}
+      {!racing || manualSourceId ? (
+        <iframe
+          ref={iframeRef}
+          key={`${iframeKey}-${activeId}`}
+          src={embedUrl}
+          className="w-full h-full border-0"
+          allowFullScreen
+          allow="autoplay; fullscreen; picture-in-picture"
+          sandbox={IFRAME_SANDBOX}
+          onLoad={handleIframeLoad}
+        />
+      ) : null}
 
       {/* ── Overlay controls ── */}
       <AnimatePresence>
@@ -311,13 +283,12 @@ export const WatchPage: React.FC = () => {
             transition={{ duration: 0.25 }}
             className="absolute inset-0 z-20 pointer-events-none"
           >
-            {/* Top gradient */}
             <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/75 to-transparent" />
 
-            {/* Controls bar */}
-            <div className="absolute top-0 left-0 right-0 flex items-center gap-3 px-4 pt-5 pb-4 pointer-events-auto"
-              onClick={(e) => e.stopPropagation()}>
-
+            <div
+              className="absolute top-0 left-0 right-0 flex items-center gap-3 px-4 pt-5 pb-4 pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Back */}
               <Link
                 to="/details/$mediaType/$id"
@@ -334,6 +305,15 @@ export const WatchPage: React.FC = () => {
                   <p className="text-white/60 text-xs">Season {season} · Episode {episode}</p>
                 )}
               </div>
+
+              {/* Active server badge */}
+              {!racing && (
+                <div className="hidden sm:flex items-center gap-1 bg-green-500/20 border border-green-500/40 text-green-400 text-xs px-2.5 py-1 rounded-full flex-shrink-0">
+                  <Zap className="w-3 h-3" />
+                  <span>{activeSource.label}</span>
+                  {activeSource.arabic && <span>🇦🇪</span>}
+                </div>
+              )}
 
               {/* TV Episode picker */}
               {mediaType === 'tv' && (
@@ -360,7 +340,7 @@ export const WatchPage: React.FC = () => {
                         <div className="flex flex-wrap gap-1.5 mb-3">
                           {Array.from({ length: totalSeasons }, (_, i) => i + 1).map((s) => (
                             <button key={s}
-                              onClick={() => { setSeason(s); setEpisode(1); setIframeKey((k) => k + 1); setShowEpisodes(false) }}
+                              onClick={() => { setSeason(s); setEpisode(1); reload(); setShowEpisodes(false) }}
                               className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
                                 s === season ? 'bg-[#E50914] text-white border-[#E50914]' : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-white hover:bg-zinc-700'
                               }`}
@@ -371,7 +351,7 @@ export const WatchPage: React.FC = () => {
                         <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto scrollbar-hide">
                           {Array.from({ length: episodesPerSeason }, (_, i) => i + 1).map((ep) => (
                             <button key={ep}
-                              onClick={() => { setEpisode(ep); setIframeKey((k) => k + 1); setShowEpisodes(false) }}
+                              onClick={() => { setEpisode(ep); reload(); setShowEpisodes(false) }}
                               className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
                                 ep === episode ? 'bg-[#E50914] text-white border-[#E50914]' : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-white hover:bg-zinc-700'
                               }`}
@@ -391,8 +371,7 @@ export const WatchPage: React.FC = () => {
                   className="flex items-center gap-1.5 text-xs text-white/80 hover:text-white bg-black/40 hover:bg-black/70 backdrop-blur-sm border border-white/15 px-3 py-1.5 rounded-full transition-all"
                 >
                   <Server className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">{currentSource.label}</span>
-                  <span className="text-[10px] text-zinc-400">({currentSourceIndex + 1}/{SOURCES.length})</span>
+                  <span className="hidden sm:inline">السيرفرات</span>
                 </button>
 
                 <AnimatePresence>
@@ -403,25 +382,41 @@ export const WatchPage: React.FC = () => {
                       exit={{ opacity: 0, y: -6, scale: 0.97 }}
                       transition={{ duration: 0.15 }}
                       className="absolute right-0 top-full mt-2 bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 rounded-xl p-3 shadow-2xl"
-                      style={{ minWidth: 180 }}
+                      style={{ minWidth: 200 }}
                     >
                       <p className="text-zinc-500 text-[10px] uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <Monitor className="w-3 h-3" /> Servers ({rankedSources.length})
+                        <Monitor className="w-3 h-3" /> اختر سيرفر يدوياً
                       </p>
                       <div className="flex flex-col gap-1.5">
-                        {rankedSources.map((src) => (
+                        {sortedSources.map((src) => (
                           <button key={src.id}
-                            onClick={() => { setSourceId(src.id); setIframeKey((k) => k + 1); setShowSources(false) }}
+                            onClick={() => {
+                              setManualSourceId(src.id)
+                              setIframeKey((k) => k + 1)
+                              setShowSources(false)
+                            }}
                             className={`text-xs px-3 py-1.5 rounded-lg border text-left transition-all flex items-center justify-between gap-2 ${
-                              src.id === sourceId
+                              src.id === activeId
                                 ? 'bg-[#E50914] text-white border-[#E50914]'
                                 : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700 hover:text-white'
                             }`}
                           >
                             <span>{src.label}</span>
+                            <div className="flex items-center gap-1">
+                              {src.arabic && <span className="text-[10px] opacity-70">🇦🇪</span>}
+                              {src.id === winnerId && !manualSourceId && (
+                                <span className="text-[10px] text-green-400">⚡</span>
+                              )}
+                            </div>
                           </button>
                         ))}
                       </div>
+                      <button
+                        onClick={() => { setManualSourceId(null); setRaceKey((k) => k + 1); setIframeKey((k) => k + 1); setShowSources(false) }}
+                        className="mt-2 w-full text-xs text-zinc-500 hover:text-white py-1.5 rounded-lg border border-zinc-700 hover:bg-zinc-800 transition-all flex items-center justify-center gap-1"
+                      >
+                        <Zap className="w-3 h-3" /> اختيار تلقائي
+                      </button>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -429,7 +424,7 @@ export const WatchPage: React.FC = () => {
 
               {/* Reload */}
               <button
-                onClick={() => setIframeKey((k) => k + 1)}
+                onClick={reload}
                 className="flex items-center justify-center w-9 h-9 rounded-full bg-black/40 hover:bg-black/70 text-white/70 hover:text-white transition-colors backdrop-blur-sm flex-shrink-0"
                 title="Reload"
               >
