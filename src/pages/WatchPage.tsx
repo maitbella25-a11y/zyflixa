@@ -127,6 +127,14 @@ const SOURCES: EmbedSource[] = [
         ? `https://www.NontonFilm.net/api/?tmdb=${id}&type=movie`
         : `https://www.NontonFilm.net/api/?tmdb=${id}&type=serie&s=${s ?? 1}&e=${e ?? 1}`,
   },
+  {
+    id: 'zyflixa',
+    label: 'Zyflixa',
+    getUrl: (t, id, s, e) =>
+      t === 'movie'
+        ? `https://zyflixa.eu.cc/embed/movie/${id}`
+        : `https://zyflixa.eu.cc/embed/tv/${id}/${s ?? 1}/${e ?? 1}`,
+  },
 ]
 
 export const WatchPage: React.FC = () => {
