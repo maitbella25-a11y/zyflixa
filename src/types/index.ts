@@ -1,4 +1,5 @@
-export type { Movie, Genre, Cast, Video, MovieDetails, TVDetails, SearchResults } from '../lib/tmdb'
+export type { Movie, Genre, Cast, Video, MovieDetails, TVDetails, SearchResults, MediaDetails } from '../lib/tmdb'
+export { getMediaTitle, getMediaYear } from '../lib/tmdb'
 export type { WatchProgress } from '../hooks/useWatchProgress'
 
 export interface GenreCategory {

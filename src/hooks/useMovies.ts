@@ -6,11 +6,11 @@ const q = (key: unknown[], fn: () => Promise<unknown>, stale = 10 * 60 * 1000, e
   useQuery({ queryKey: key, queryFn: fn as any, staleTime: stale, enabled })
 
 // ─── Trending (always eager — visible above fold) ─────────────────────────────
-export const useTrending = (mediaType: 'movie' | 'tv' | 'all' = 'all', timeWindow: 'day' | 'week' = 'week') =>
-  useQuery({ queryKey: ['trending', mediaType, timeWindow], queryFn: () => api.getTrending(mediaType, timeWindow), staleTime: 5 * 60 * 1000 })
+export const useTrending = (mediaType: 'movie' | 'tv' | 'all' = 'all', timeWindow: 'day' | 'week' = 'week', enabled = true) =>
+  useQuery({ queryKey: ['trending', mediaType, timeWindow], queryFn: () => api.getTrending(mediaType, timeWindow), staleTime: 5 * 60 * 1000, enabled })
 
 // ─── Movies ──────────────────────────────────────────────────────────────────
-export const usePopularMovies    = (page = 1) => useQuery({ queryKey: ['popular-movies', page], queryFn: () => api.getPopularMovies(page), staleTime: 5 * 60 * 1000 })
+export const usePopularMovies    = (page = 1, enabled = true) => useQuery({ queryKey: ['popular-movies', page], queryFn: () => api.getPopularMovies(page), staleTime: 5 * 60 * 1000, enabled })
 export const useTopRatedMovies   = (enabled = true) => q(['top-rated-movies'],   api.getTopRatedMovies,   10 * 60 * 1000, enabled)
 export const useNowPlaying       = (enabled = true) => q(['now-playing'],         api.getNowPlayingMovies,  5 * 60 * 1000, enabled)
 export const useUpcomingMovies   = (enabled = true) => q(['upcoming-movies'],     api.getUpcomingMovies,   10 * 60 * 1000, enabled)
@@ -34,7 +34,7 @@ export const useMusicMovies       = (e = true) => q(['music-movies'],       api.
 export const useHistoryMovies     = (e = true) => q(['history-movies'],     api.getHistoryMovies,     10 * 60 * 1000, e)
 
 // ─── TV Shows ────────────────────────────────────────────────────────────────
-export const usePopularTV    = (page = 1) => useQuery({ queryKey: ['popular-tv', page], queryFn: () => api.getPopularTV(page), staleTime: 5 * 60 * 1000 })
+export const usePopularTV    = (page = 1, enabled = true) => useQuery({ queryKey: ['popular-tv', page], queryFn: () => api.getPopularTV(page), staleTime: 5 * 60 * 1000, enabled })
 export const useTVDetails    = (id: number) => useQuery({ queryKey: ['tv', id], queryFn: () => api.getTVDetails(id), staleTime: 30 * 60 * 1000, enabled: !!id })
 export const useTVByGenre    = (genreId: number) => useQuery({ queryKey: ['genre-tv', genreId], queryFn: () => api.getTVByGenre(genreId), staleTime: 10 * 60 * 1000, enabled: !!genreId })
 export const useTVGenres     = () => q(['tv-genres'], api.getTVGenres, 60 * 60 * 1000)

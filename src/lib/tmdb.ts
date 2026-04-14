@@ -2,7 +2,7 @@
 export const TMDB_CONFIG = {
   BASE_URL: 'https://api.themoviedb.org/3',
   IMAGE_BASE: 'https://image.tmdb.org/t/p',
-  API_KEY: '4f5f43495afcc67e9553f6c684a82f84',
+  API_KEY: import.meta.env.VITE_TMDB_API_KEY,
 }
 
 const PLACEHOLDER_POSTER = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='450' viewBox='0 0 300 450'%3E%3Crect width='300' height='450' fill='%2327272a'/%3E%3Crect x='110' y='185' width='80' height='60' rx='4' fill='%2352525b'/%3E%3Ctext x='150' y='270' text-anchor='middle' fill='%2371717a' font-size='12' font-family='sans-serif'%3ENo Image%3C/text%3E%3C/svg%3E`
@@ -84,6 +84,7 @@ export interface TVDetails extends Movie {
   episode_run_time: number[]
   number_of_seasons: number
   number_of_episodes: number
+  seasons: { season_number: number; episode_count: number; name: string }[]
   status: string
   tagline: string
   videos: { results: Video[] }
@@ -97,3 +98,14 @@ export interface SearchResults {
   total_results: number
   page: number
 }
+
+/** Utility union for pages that display either movie or TV details */
+export type MediaDetails = MovieDetails | TVDetails
+
+/** Helper to get the display title from any media details object */
+export const getMediaTitle = (d: MediaDetails | null): string =>
+  d ? (d.title || d.name || '') : ''
+
+/** Helper to get the release year */
+export const getMediaYear = (d: MediaDetails | null): string =>
+  d ? (d.release_date || d.first_air_date || '').slice(0, 4) : ''

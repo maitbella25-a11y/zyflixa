@@ -3,14 +3,13 @@ import { useParams, Link } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { Play, Star, Clock, Calendar, Plus, Check, ChevronLeft, ExternalLink, Server } from 'lucide-react'
 import { useMovieDetails, useTVDetails } from '../hooks/useMovies'
-import { getImageUrl, getBackdropUrl, getBackdropSrcSet } from '../lib/tmdb'
+import { getImageUrl, getBackdropUrl, getBackdropSrcSet, getMediaTitle, getMediaYear } from '../lib/tmdb'
+import type { MovieDetails, TVDetails, Cast, Video, MediaDetails } from '../lib/tmdb'
+
 import { Spinner } from '../components/ui/Spinner'
 import { MovieRow } from '../components/MovieRow'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { useSEO } from '../hooks/useSEO'
-import type { MovieDetails, TVDetails, Cast, Video } from '../lib/tmdb'
-
-type DetailsData = MovieDetails | TVDetails
 
 const CastCard: React.FC<{ cast: Cast }> = ({ cast }) => (
   <div className="flex-shrink-0 w-[110px] text-center">
@@ -46,18 +45,13 @@ export const DetailsPage: React.FC = () => {
   )
   const { data: tvData, isLoading: tvLoading } = useTVDetails(mediaType === 'tv' ? id : 0)
 
-  const details: DetailsData | null =
+  const details: MediaDetails | null =
     mediaType === 'movie' ? (movieData || null) : (tvData || null)
   const isLoading = mediaType === 'movie' ? movieLoading : tvLoading
 
   // ── Derive values early (safe when details is null) ──────────────────────
-  const title =
-    (details as { title?: string; name?: string } | null)?.title ||
-    (details as { name?: string } | null)?.name || ''
-  const year = (
-    (details as { release_date?: string; first_air_date?: string } | null)?.release_date ||
-    (details as { first_air_date?: string } | null)?.first_air_date || ''
-  ).slice(0, 4)
+  const title = getMediaTitle(details)
+  const year = getMediaYear(details)
   const seoImage = details ? getBackdropUrl(details.backdrop_path, 'w1280') : undefined
   const seoDesc  = details?.overview
     ? details.overview.slice(0, 160)
@@ -89,8 +83,8 @@ export const DetailsPage: React.FC = () => {
     )
   }
 
-  const runtime = (details as { runtime?: number }).runtime
-  const seasons = (details as { number_of_seasons?: number }).number_of_seasons
+  const runtime = 'runtime' in details ? details.runtime : undefined
+  const seasons = 'number_of_seasons' in details ? details.number_of_seasons : undefined
   const trailerVideo: Video | undefined =
     details.videos?.results?.find((v) => v.type === 'Trailer' && v.site === 'YouTube') ||
     details.videos?.results?.[0]

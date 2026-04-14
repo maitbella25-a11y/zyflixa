@@ -68,7 +68,14 @@ const ProfilePage: React.FC = () => (
 )
 
 const indexRoute     = createRoute({ getParentRoute: () => rootRoute, path: '/',                       component: HomePage })
-const searchRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/search',                 component: SearchPage })
+const searchRoute    = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/search',
+  validateSearch: (search: Record<string, unknown>): { q?: string } => ({
+    q: (search.q as string) || undefined,
+  }),
+  component: SearchPage,
+})
 const detailsRoute   = createRoute({ getParentRoute: () => rootRoute, path: '/details/$mediaType/$id', component: DetailsPage })
 const animeRoute     = createRoute({ getParentRoute: () => rootRoute, path: '/anime/$id',              component: AnimeDetailsPage })
 const browseRoute    = createRoute({ getParentRoute: () => rootRoute, path: '/browse/$category',       component: BrowsePage })

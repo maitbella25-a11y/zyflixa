@@ -47,14 +47,14 @@ export const BrowsePage: React.FC = () => {
   const category = params.category
   const [page, setPage] = useState(1)
 
-  const moviesResult = usePopularMovies(page)
-  const tvResult = usePopularTV(page)
-  const trendingResult = useTrending('all', 'week')
-  const topRatedResult = useTopRatedMovies()
-  const nowPlayingResult = useNowPlaying()
-  const topAnimeResult = useTopAnime()
-  const trendingAnimeResult = useTrendingAnime()
-  const seasonalAnimeResult = useSeasonalAnime()
+  const moviesResult = usePopularMovies(category === 'movies' ? page : 1, category === 'movies')
+  const tvResult = usePopularTV(category === 'tv' ? page : 1, category === 'tv')
+  const trendingResult = useTrending('all', 'week', category === 'trending')
+  const topRatedResult = useTopRatedMovies(category === 'top-rated')
+  const nowPlayingResult = useNowPlaying(category === 'now-playing')
+  const topAnimeResult = useTopAnime(category === 'anime')
+  const trendingAnimeResult = useTrendingAnime(category === 'anime')
+  const seasonalAnimeResult = useSeasonalAnime(category === 'anime')
 
   // Accumulate pages for paginated endpoints
   const [accumulatedMovies, setAccumulatedMovies] = useState<Movie[]>([])

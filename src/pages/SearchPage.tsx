@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence, useNavigate } from 'framer-motion'
-import { useNavigate as useTSNavigate } from '@tanstack/react-router'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useNavigate, useSearch as useRouterSearch } from '@tanstack/react-router'
 import { Search, X, Film, Tv, Sparkles } from 'lucide-react'
 import { useSearch } from '../hooks/useMovies'
 import { useQuery } from '@tanstack/react-query'
@@ -20,32 +20,39 @@ const FILTERS: { type: FilterType; label: string; icon: React.ReactNode }[] = [
 ]
 
 export const SearchPage: React.FC = () => {
-  const [query, setQuery] = useState('')
-  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const routerSearch = useRouterSearch({ from: '/search' })
+  const navigate = useNavigate()
+  
+  const [query, setQuery] = useState(routerSearch.q || '')
+  const [debouncedQuery, setDebouncedQuery] = useState(routerSearch.q || '')
   const [filter, setFilter] = useState<FilterType>('all')
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Debounce
+  // Sync state if URL changes externally
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(query), 400)
-    return () => clearTimeout(t)
-  }, [query])
+    setQuery(routerSearch.q || '')
+    setDebouncedQuery(routerSearch.q || '')
+  }, [routerSearch.q])
 
-  // Parse query from URL on mount
+  // Debounce and sync to URL
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search).get('q') || ''
-    setQuery(q)
-    setDebouncedQuery(q)
+    const t = setTimeout(() => {
+      setDebouncedQuery(query)
+      navigate({
+        to: '/search',
+        search: (prev) => ({ ...prev, q: query || undefined }),
+        replace: true,
+      })
+    }, 400)
+    return () => clearTimeout(t)
+  }, [query, navigate])
+
+  useEffect(() => {
     setTimeout(() => inputRef.current?.focus(), 100)
   }, [])
 
-  // Sync query to URL without page reload
   const handleChange = (value: string) => {
     setQuery(value)
-    const url = new URL(window.location.href)
-    if (value) url.searchParams.set('q', value)
-    else url.searchParams.delete('q')
-    window.history.replaceState({}, '', url.toString())
   }
 
   const { data: tmdbData, isLoading: tmdbLoading } = useSearch(debouncedQuery)
@@ -66,9 +73,9 @@ export const SearchPage: React.FC = () => {
 
   const normalizedAnime = animeResults.map((a: AnimeEntry) => ({
     id: a.mal_id,
-    title: (a as any).title_english || a.title,
-    name: (a as any).title_english || a.title,
-    poster_path: (a as any).images?.jpg?.large_image_url || (a as any).images?.jpg?.image_url,
+    title: a.title_english || a.title,
+    name: a.title_english || a.title,
+    poster_path: a.images?.jpg?.large_image_url || a.images?.jpg?.image_url,
     vote_average: a.score || 0,
     media_type: 'anime',
     overview: a.synopsis || '',

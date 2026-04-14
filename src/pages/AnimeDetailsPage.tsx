@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { Play, Star, Clock, Calendar, Plus, Check, ChevronLeft, ExternalLink } from 'lucide-react'
 import { getAnimeById, getAnimeCharacters } from '../lib/api'
+import type { AnimeEntry } from '../lib/api'
 import { Spinner } from '../components/ui/Spinner'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { useSEO } from '../hooks/useSEO'
@@ -29,10 +30,10 @@ export const AnimeDetailsPage: React.FC = () => {
   })
 
   // Derive values early so useSEO can be called before early returns (Rules of Hooks)
-  const title = (anime as any)?.title_english || (anime as any)?.title || ''
-  const poster = (anime as any)?.images?.jpg?.large_image_url || (anime as any)?.poster_path || ''
-  const synopsis = (anime as any)?.synopsis || (anime as any)?.overview || ''
-  const year = (anime as any)?.year || ((anime as any)?.release_date || '').slice(0, 4)
+  const title = anime?.title_english || anime?.title || ''
+  const poster = anime?.images?.jpg?.large_image_url || anime?.poster_path || ''
+  const synopsis = anime?.synopsis || anime?.overview || ''
+  const year = anime?.year || (anime?.release_date || '').slice(0, 4)
 
   // useSEO MUST be called before any early return (Rules of Hooks)
   useSEO({
@@ -60,11 +61,11 @@ export const AnimeDetailsPage: React.FC = () => {
     )
   }
 
-  const score = (anime as any).score || (anime as any).vote_average || 0
-  const episodes = (anime as any).episodes
-  const status = (anime as any).status
-  const genres: { name: string }[] = (anime as any).genres || []
-  const trailerUrl = (anime as any).trailer?.embed_url || (anime as any).trailer?.url
+  const score = anime.score || anime.vote_average || 0
+  const episodes = anime.episodes
+  const status = anime.status
+  const genres: { name: string }[] = anime.genres || []
+  const trailerUrl = anime.trailer?.embed_url || anime.trailer?.url
 
   const ytKey = trailerUrl?.match(/embed\/([^?]+)/)?.[1]
 

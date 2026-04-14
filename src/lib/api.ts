@@ -136,7 +136,7 @@ export const getPopularTV = async (page: number = 1): Promise<Movie[]> => {
 export const getTVDetails = async (id: number): Promise<TVDetails | null> => {
   try {
     const data = await fetcher<TVDetails>(`/tv/${id}`, {
-      append_to_response: 'videos,credits,similar',
+      append_to_response: 'videos,credits,similar,seasons',
     })
     return data
   } catch {
@@ -359,6 +359,152 @@ export const getTrendingTV = async (): Promise<Movie[]> => {
   }
 }
 
+export const getRomanceMovies = async (): Promise<Movie[]> => {
+  try {
+    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
+      with_genres: '10749',
+      sort_by: 'popularity.desc',
+    })
+    return data.results ?? []
+  } catch {
+    return []
+  }
+}
+
+export const getWesternMovies = async (): Promise<Movie[]> => {
+  try {
+    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
+      with_genres: '37',
+      sort_by: 'popularity.desc',
+    })
+    return data.results ?? []
+  } catch {
+    return []
+  }
+}
+
+export const getFantasyMovies = async (): Promise<Movie[]> => {
+  try {
+    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
+      with_genres: '14',
+      sort_by: 'popularity.desc',
+    })
+    return data.results ?? []
+  } catch {
+    return []
+  }
+}
+
+export const getCrimeMovies = async (): Promise<Movie[]> => {
+  try {
+    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
+      with_genres: '80',
+      sort_by: 'popularity.desc',
+    })
+    return data.results ?? []
+  } catch {
+    return []
+  }
+}
+
+export const getMusicMovies = async (): Promise<Movie[]> => {
+  try {
+    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
+      with_genres: '10402',
+      sort_by: 'popularity.desc',
+    })
+    return data.results ?? []
+  } catch {
+    return []
+  }
+}
+
+export const getHistoryMovies = async (): Promise<Movie[]> => {
+  try {
+    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
+      with_genres: '36',
+      sort_by: 'popularity.desc',
+    })
+    return data.results ?? []
+  } catch {
+    return []
+  }
+}
+
+// ─── More TV Shows (additional genres) ────────────────────────────────────────
+
+export const getDramaTV = async (): Promise<Movie[]> => {
+  try {
+    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
+      with_genres: '18',
+      sort_by: 'popularity.desc',
+    })
+    return data.results ?? []
+  } catch {
+    return []
+  }
+}
+
+export const getMysteryTV = async (): Promise<Movie[]> => {
+  try {
+    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
+      with_genres: '9648',
+      sort_by: 'popularity.desc',
+    })
+    return data.results ?? []
+  } catch {
+    return []
+  }
+}
+
+export const getAnimationTV = async (): Promise<Movie[]> => {
+  try {
+    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
+      with_genres: '16',
+      sort_by: 'popularity.desc',
+    })
+    return data.results ?? []
+  } catch {
+    return []
+  }
+}
+
+export const getSciFiTV = async (): Promise<Movie[]> => {
+  try {
+    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
+      with_genres: '10765',
+      sort_by: 'popularity.desc',
+    })
+    return data.results ?? []
+  } catch {
+    return []
+  }
+}
+
+export const getFamilyTV = async (): Promise<Movie[]> => {
+  try {
+    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
+      with_genres: '10751',
+      sort_by: 'popularity.desc',
+    })
+    return data.results ?? []
+  } catch {
+    return []
+  }
+}
+
+export const getTalkShowTV = async (): Promise<Movie[]> => {
+  try {
+    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
+      with_genres: '10767',
+      sort_by: 'popularity.desc',
+    })
+    return data.results ?? []
+  } catch {
+    return []
+  }
+}
+
 // ─── People ──────────────────────────────────────────────────────────────────
 
 export const getPersonDetails = async (id: number): Promise<Record<string, unknown> | null> => {
@@ -472,6 +618,28 @@ export const getAnimeById = async (id: number): Promise<AnimeEntry | null> => {
     return normalizeAnime(data.data)
   } catch {
     return null
+  }
+}
+
+export const getTopMangaAnime = async (): Promise<AnimeEntry[]> => {
+  try {
+    const res = await jikanFetch(`${JIKAN_BASE}/top/anime?filter=bypopularity&type=tv&limit=20`)
+    if (!res.ok) return []
+    const data = await res.json() as { data: AnimeEntry[] }
+    return (data.data || []).map(normalizeAnime)
+  } catch {
+    return []
+  }
+}
+
+export const getKidsAnime = async (): Promise<AnimeEntry[]> => {
+  try {
+    const res = await jikanFetch(`${JIKAN_BASE}/anime?genres=15&order_by=score&sort=desc&limit=20&sfw=true`)
+    if (!res.ok) return []
+    const data = await res.json() as { data: AnimeEntry[] }
+    return (data.data || []).map(normalizeAnime)
+  } catch {
+    return []
   }
 }
 

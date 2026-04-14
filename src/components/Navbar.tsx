@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Bell, User, Menu, X } from 'lucide-react'
 
@@ -9,6 +9,7 @@ export const Navbar: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 20)
@@ -23,7 +24,7 @@ export const Navbar: React.FC = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`
+      navigate({ to: '/search', search: { q: searchQuery.trim() } })
       setShowSearch(false)
       setSearchQuery('')
     }
@@ -32,7 +33,7 @@ export const Navbar: React.FC = () => {
   const handleMobileSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`
+      navigate({ to: '/search', search: { q: searchQuery.trim() } })
       setMobileMenuOpen(false)
       setSearchQuery('')
     }
