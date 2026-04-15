@@ -299,7 +299,7 @@ export const WatchPage: React.FC = () => {
           >
             <Server className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{currentSource.label}</span>
-            <span className="text-[10px] text-zinc-400">({currentSourceIndex + 1}/{SOURCES.length})</span>
+            <span className="text-[10px] text-zinc-400">({currentSourceIndex + 1}/{rankedSources.length})</span>
           </button>
 
           <AnimatePresence>

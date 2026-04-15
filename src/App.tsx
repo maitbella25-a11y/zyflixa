@@ -83,16 +83,18 @@ const watchlistRoute = createRoute({ getParentRoute: () => rootRoute, path: '/wa
 const profileRoute   = createRoute({ getParentRoute: () => rootRoute, path: '/profile',               component: ProfilePage })
 
 // ── Watch route — NO Navbar, full black screen ───────────────────────────────
-const watchRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/watch/$mediaType/$id',
-  component: WatchPage,
-})
-
+// NOTE: animeWatchRoute MUST be defined before watchRoute so that
+// /watch/anime/$id is matched before the generic /watch/$mediaType/$id
 const animeWatchRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/watch/anime/$id',
   component: AnimeWatchPage,
+})
+
+const watchRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/watch/$mediaType/$id',
+  component: WatchPage,
 })
 
 const routeTree = rootRoute.addChildren([
@@ -100,8 +102,8 @@ const routeTree = rootRoute.addChildren([
   searchRoute,
   detailsRoute,
   animeRoute,
+  animeWatchRoute, // must come before watchRoute
   watchRoute,
-  animeWatchRoute,
   browseRoute,
   watchlistRoute,
   profileRoute,

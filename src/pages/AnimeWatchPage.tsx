@@ -1,11 +1,12 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react'
-import { useParams, Link } from '@tanstack/react-router'
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { useParams } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, Server, Monitor, RefreshCw, ChevronDown, AlertTriangle } from 'lucide-react'
+import { Server, Monitor, ChevronDown } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { getAnimeById } from '../lib/api'
 import { Spinner } from '../components/ui/Spinner'
 import { useSEO } from '../hooks/useSEO'
+import { rankServers, recordSuccess, recordFailure } from '../hooks/useServerRanking'
 
 interface AnimeEmbedSource {
   id: string
@@ -13,61 +14,37 @@ interface AnimeEmbedSource {
   getUrl: (malId: number, ep?: number) => string
 }
 
-// ── Servers that accept MAL ID directly ──────────────────────────────────────
+// ── Servers that accept MAL ID directly — all are true embed URLs ─────────────
 const ANIME_SOURCES: AnimeEmbedSource[] = [
   {
-    // MegaPlay: dedicated anime embed API — supports MAL ID + episode number
-    id: 'megaplay',
-    label: 'MegaPlay',
-    getUrl: (id, ep = 1) => `https://megaplay.buzz/stream/s-2/${id}/sub?mal=${id}&ep=${ep}`,
-  },
-  {
-    // Autoembed supports anime via MAL ID
     id: 'autoembed-anime',
     label: 'AutoEmbed',
     getUrl: (id, ep = 1) => `https://autoembed.cc/anime/mal/${id}/${ep}`,
   },
   {
-    // Videasy — supports anime with MAL ID
     id: 'videasy-anime',
     label: 'Videasy',
     getUrl: (id, ep = 1) => `https://player.videasy.net/anime/${id}/${ep}`,
   },
   {
-    // VidSrc supports anime too
     id: 'vidsrc-anime',
     label: 'VidSrc',
     getUrl: (id, ep = 1) => `https://vidsrc.me/embed/anime?mal=${id}&episode=${ep}`,
   },
   {
-    // AniWatch.to (aniwatchtv.to) — still working in 2026 as HiAnime successor
-    id: 'aniwatch',
-    label: 'AniWatch',
-    getUrl: (id) => `https://aniwatchtv.to/search?keyword=${id}`,
+    id: 'megaplay',
+    label: 'MegaPlay',
+    getUrl: (id, ep = 1) => `https://megaplay.buzz/stream/s-2/${id}/sub?mal=${id}&ep=${ep}`,
   },
   {
-    // AnimePahe — known for good quality & minimal ads
-    id: 'animepahe',
-    label: 'AnimePahe',
-    getUrl: (id) => `https://animepahe.ru/a/${id}`,
+    id: 'vidsrc-cc-anime',
+    label: 'VidSrc CC',
+    getUrl: (id, ep = 1) => `https://vidsrc.cc/v2/embed/anime/${id}/${ep}`,
   },
   {
-    // 9AnimeTV — popular mirror working in 2026
-    id: '9animetv',
-    label: '9AnimeTV',
-    getUrl: (id) => `https://9animetv.to/search?keyword=${id}`,
-  },
-  {
-    // GogoAnime (Anitaku) — massive library, still active
-    id: 'gogoanime',
-    label: 'GogoAnime',
-    getUrl: (id) => `https://anitaku.pe/category/${id}`,
-  },
-  {
-    // AllAnime — good alternative, active in 2026
-    id: 'allanime',
-    label: 'AllAnime',
-    getUrl: (id) => `https://allanime.to/anime/${id}`,
+    id: 'multiembed-anime',
+    label: 'MultiEmbed',
+    getUrl: (id, ep = 1) => `https://multiembed.mov/?mal_id=${id}&episode=${ep}`,
   },
 ]
 
@@ -77,7 +54,10 @@ export const AnimeWatchPage: React.FC = () => {
   const params = useParams({ from: '/watch/anime/$id' })
   const malId  = parseInt(params.id, 10)
 
-  const [sourceId, setSourceId]           = useState(ANIME_SOURCES[0].id)
+  // Sort servers by historical success score — best first
+  const rankedSources = useMemo(() => rankServers(ANIME_SOURCES), [])
+
+  const [sourceId, setSourceId]           = useState(rankedSources[0].id)
   const [episode, setEpisode]             = useState(1)
   const [iframeKey, setIframeKey]         = useState(0)
   const [showSources, setShowSources]     = useState(false)
@@ -93,9 +73,9 @@ export const AnimeWatchPage: React.FC = () => {
     staleTime: 30 * 60 * 1000,
   })
 
-  const title          = (anime as any)?.title_english || (anime as any)?.title || ''
-  const totalEpisodes  = (anime as any)?.episodes || 24
-  const poster         = (anime as any)?.images?.jpg?.large_image_url || undefined
+  const title         = (anime as any)?.title_english || (anime as any)?.title || ''
+  const totalEpisodes = (anime as any)?.episodes || 24
+  const poster        = (anime as any)?.images?.jpg?.large_image_url || undefined
 
   useSEO({
     title:       title ? `Watch ${title} — Episode ${episode}` : 'Watch Anime',
@@ -104,8 +84,8 @@ export const AnimeWatchPage: React.FC = () => {
     url:         `/watch/anime/${malId}`,
   })
 
-  const currentSource      = ANIME_SOURCES.find((s) => s.id === sourceId) ?? ANIME_SOURCES[0]
-  const currentSourceIndex = ANIME_SOURCES.findIndex((s) => s.id === sourceId)
+  const currentSource      = rankedSources.find((s) => s.id === sourceId) ?? rankedSources[0]
+  const currentSourceIndex = rankedSources.findIndex((s) => s.id === sourceId)
   const embedUrl           = currentSource.getUrl(malId, episode)
 
   // Auto-fallback after 10s
@@ -114,9 +94,10 @@ export const AnimeWatchPage: React.FC = () => {
     setAutoFallback(false)
     if (errorTimer.current) clearTimeout(errorTimer.current)
     errorTimer.current = setTimeout(() => {
-      const next = (currentSourceIndex + 1) % ANIME_SOURCES.length
+      recordFailure(sourceId)
+      const next = (currentSourceIndex + 1) % rankedSources.length
       if (next !== 0) {
-        setSourceId(ANIME_SOURCES[next].id)
+        setSourceId(rankedSources[next].id)
         setIframeKey((k) => k + 1)
         setAutoFallback(true)
       } else {
@@ -124,15 +105,22 @@ export const AnimeWatchPage: React.FC = () => {
       }
     }, 10000)
     return () => { if (errorTimer.current) clearTimeout(errorTimer.current) }
-  }, [iframeKey, sourceId, currentSourceIndex])
+  }, [iframeKey, sourceId, currentSourceIndex, rankedSources])
 
   const handleNextSource = useCallback(() => {
-    const next = ANIME_SOURCES[(currentSourceIndex + 1) % ANIME_SOURCES.length]
+    recordFailure(sourceId)
+    const next = rankedSources[(currentSourceIndex + 1) % rankedSources.length]
     setSourceId(next.id)
     setIframeKey((k) => k + 1)
     setAutoFallback(true)
     setLoadError(false)
-  }, [currentSourceIndex])
+  }, [currentSourceIndex, rankedSources, sourceId])
+
+  const handleIframeLoad = useCallback(() => {
+    setLoadError(false)
+    recordSuccess(sourceId)
+    if (errorTimer.current) clearTimeout(errorTimer.current)
+  }, [sourceId])
 
   return (
     <WatchShell
@@ -141,19 +129,16 @@ export const AnimeWatchPage: React.FC = () => {
       backTo={{ to: '/anime/$id', params: { id: String(malId) } }}
       currentSource={currentSource}
       sourceIndex={currentSourceIndex}
-      totalSources={ANIME_SOURCES.length}
+      totalSources={rankedSources.length}
       onNextSource={handleNextSource}
       onReload={() => setIframeKey((k) => k + 1)}
       isLoading={isLoading}
       iframeKey={iframeKey}
       embedUrl={embedUrl}
-      onIframeLoad={() => {
-        setLoadError(false)
-        if (errorTimer.current) clearTimeout(errorTimer.current)
-      }}
+      onIframeLoad={handleIframeLoad}
       loadError={loadError}
       autoFallback={autoFallback}
-      accentColor="#7c3aed" // Violet 600
+      accentColor="#7c3aed"
       topRightControls={
         <div className="relative flex-shrink-0">
           <button
@@ -203,7 +188,7 @@ export const AnimeWatchPage: React.FC = () => {
           >
             <Server className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{currentSource.label}</span>
-            <span className="text-[10px] text-zinc-400">({currentSourceIndex + 1}/{ANIME_SOURCES.length})</span>
+            <span className="text-[10px] text-zinc-400">({currentSourceIndex + 1}/{rankedSources.length})</span>
           </button>
 
           <AnimatePresence>
@@ -220,7 +205,7 @@ export const AnimeWatchPage: React.FC = () => {
                   <Monitor className="w-3 h-3" /> Anime Servers
                 </p>
                 <div className="flex flex-col gap-1.5">
-                  {ANIME_SOURCES.map((src) => (
+                  {rankedSources.map((src) => (
                     <button
                       key={src.id}
                       onClick={() => { setSourceId(src.id); setIframeKey((k) => k + 1); setShowSources(false) }}

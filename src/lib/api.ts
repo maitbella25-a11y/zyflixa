@@ -554,7 +554,9 @@ const jikanFetch = (url: string): Promise<Response> =>
     jikanNext()
   })
 
-// Normalize Jikan anime entry into a Movie-compatible shape for MovieCard
+// Normalize Jikan anime entry into a Movie-compatible shape for MovieCard.
+// NOTE: poster_path is stored as a full URL (not a TMDB path), because
+// MovieCard detects media_type === 'anime' and skips getImageUrl() for these.
 const normalizeAnime = (anime: AnimeEntry): AnimeEntry => ({
   ...anime,
   id: anime.mal_id,
@@ -562,7 +564,9 @@ const normalizeAnime = (anime: AnimeEntry): AnimeEntry => ({
   overview: anime.synopsis || '',
   vote_average: anime.score || 0,
   media_type: 'anime',
+  // Store the full Jikan image URL directly — MovieCard uses it as-is for anime
   poster_path: anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || '',
+  backdrop_path: anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || null,
   release_date: anime.year ? String(anime.year) : '',
 })
 
