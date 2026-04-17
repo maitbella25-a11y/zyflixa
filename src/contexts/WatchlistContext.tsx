@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import { WatchlistItemSchema } from '../lib/validation'
 
 export interface WatchlistItem {
   id: number
@@ -11,9 +12,9 @@ export interface WatchlistItem {
 
 interface WatchlistContextType {
   watchlist: WatchlistItem[]
-  isInWatchlist: (id: number) => boolean
+  isInWatchlist: (id: number, mediaType: 'movie' | 'tv' | 'anime') => boolean
   addToWatchlist: (item: Omit<WatchlistItem, 'addedAt'>) => void
-  removeFromWatchlist: (id: number) => void
+  removeFromWatchlist: (id: number, mediaType: 'movie' | 'tv' | 'anime') => void
   toggleWatchlist: (item: Omit<WatchlistItem, 'addedAt'>) => void
   clearWatchlist: () => void
   count: number
@@ -23,10 +24,21 @@ const WatchlistContext = createContext<WatchlistContextType | undefined>(undefin
 
 const STORAGE_KEY = 'zyflixa_watchlist'
 
+// Helper to create a composite key from id + mediaType
+const getWatchlistKey = (id: number, mediaType: 'movie' | 'tv' | 'anime'): string =>
+  `${mediaType}:${id}`
+
 const loadWatchlist = (): WatchlistItem[] => {
   try {
     const data = localStorage.getItem(STORAGE_KEY)
-    return data ? JSON.parse(data) : []
+    if (!data) return []
+    const parsed = JSON.parse(data)
+    if (!Array.isArray(parsed)) return []
+    // Validate each item with Zod and discard invalid ones
+    return parsed.filter((item) => {
+      const result = WatchlistItemSchema.safeParse(item)
+      return result.success
+    })
   } catch {
     return []
   }
@@ -49,25 +61,30 @@ export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [watchlist])
 
   const isInWatchlist = useCallback(
-    (id: number): boolean => watchlist.some((item) => item.id === id),
+    (id: number, mediaType: 'movie' | 'tv' | 'anime'): boolean => {
+      const key = getWatchlistKey(id, mediaType)
+      return watchlist.some((item) => getWatchlistKey(item.id, item.mediaType) === key)
+    },
     [watchlist],
   )
 
   const addToWatchlist = useCallback((item: Omit<WatchlistItem, 'addedAt'>): void => {
     setWatchlist((prev) => {
-      if (prev.some((i) => i.id === item.id)) return prev
+      const key = getWatchlistKey(item.id, item.mediaType)
+      if (prev.some((i) => getWatchlistKey(i.id, i.mediaType) === key)) return prev
       return [{ ...item, addedAt: Date.now() }, ...prev]
     })
   }, [])
 
-  const removeFromWatchlist = useCallback((id: number): void => {
-    setWatchlist((prev) => prev.filter((item) => item.id !== id))
+  const removeFromWatchlist = useCallback((id: number, mediaType: 'movie' | 'tv' | 'anime'): void => {
+    const key = getWatchlistKey(id, mediaType)
+    setWatchlist((prev) => prev.filter((item) => getWatchlistKey(item.id, item.mediaType) !== key))
   }, [])
 
   const toggleWatchlist = useCallback(
     (item: Omit<WatchlistItem, 'addedAt'>): void => {
-      if (isInWatchlist(item.id)) {
-        removeFromWatchlist(item.id)
+      if (isInWatchlist(item.id, item.mediaType)) {
+        removeFromWatchlist(item.id, item.mediaType)
       } else {
         addToWatchlist(item)
       }

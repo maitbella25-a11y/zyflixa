@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Server, Monitor, ChevronDown } from 'lucide-react'
@@ -56,7 +56,7 @@ export const AnimeWatchPage: React.FC = () => {
   const malId  = parseInt(params.id, 10)
 
   // Sort servers by historical success score — best first
-  const rankedSources = useMemo(() => rankServers(ANIME_SOURCES), [])
+  const rankedSources = rankServers(ANIME_SOURCES)
 
   const [sourceId, setSourceId]           = useState(rankedSources[0].id)
   const [episode, setEpisode]             = useState(1)
@@ -66,6 +66,7 @@ export const AnimeWatchPage: React.FC = () => {
   const [loadError, setLoadError]         = useState(false)
   const [autoFallback, setAutoFallback]   = useState(false)
   const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const fallbackAttempts = useRef(0)
 
   const { data: anime, isLoading } = useQuery({
     queryKey: ['anime-detail', malId],
@@ -93,11 +94,13 @@ export const AnimeWatchPage: React.FC = () => {
   useEffect(() => {
     setLoadError(false)
     setAutoFallback(false)
+    fallbackAttempts.current = 0
     if (errorTimer.current) clearTimeout(errorTimer.current)
     errorTimer.current = setTimeout(() => {
       recordFailure(sourceId)
-      const next = (currentSourceIndex + 1) % rankedSources.length
-      if (next !== 0) {
+      fallbackAttempts.current++
+      if (fallbackAttempts.current < rankedSources.length) {
+        const next = (currentSourceIndex + 1) % rankedSources.length
         setSourceId(rankedSources[next].id)
         setIframeKey((k) => k + 1)
         setAutoFallback(true)

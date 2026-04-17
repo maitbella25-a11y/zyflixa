@@ -1,3 +1,5 @@
+import React from 'react'
+
 /**
  * ✨ This file replaces the old AdBanner.tsx
  * 

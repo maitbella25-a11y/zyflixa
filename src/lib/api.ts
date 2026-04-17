@@ -178,91 +178,35 @@ export const searchMulti = async (query: string, page: number = 1): Promise<Sear
   }
 }
 
+// ─── Generic helper for discovering by genre ──────────────────────────────────
+
+const discoverByGenre = async (type: 'movie' | 'tv', genreId: string): Promise<Movie[]> => {
+  try {
+    const data = await fetcher<{ results: Movie[] }>(`/discover/${type}`, {
+      with_genres: genreId,
+      sort_by: 'popularity.desc',
+    })
+    return data.results ?? []
+  } catch {
+    return []
+  }
+}
+
 // ─── More Movies ─────────────────────────────────────────────────────────────
 
-export const getActionMovies = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
-      with_genres: '28',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getComedyMovies = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
-      with_genres: '35',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getHorrorMovies = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
-      with_genres: '27',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getSciFiMovies = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
-      with_genres: '878',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getThrillerMovies = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
-      with_genres: '53',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getAnimationMovies = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
-      with_genres: '16',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getDocumentaryMovies = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
-      with_genres: '99',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
+export const getActionMovies = () => discoverByGenre('movie', '28')
+export const getComedyMovies = () => discoverByGenre('movie', '35')
+export const getHorrorMovies = () => discoverByGenre('movie', '27')
+export const getSciFiMovies = () => discoverByGenre('movie', '878')
+export const getThrillerMovies = () => discoverByGenre('movie', '53')
+export const getAnimationMovies = () => discoverByGenre('movie', '16')
+export const getDocumentaryMovies = () => discoverByGenre('movie', '99')
+export const getRomanceMovies = () => discoverByGenre('movie', '10749')
+export const getWesternMovies = () => discoverByGenre('movie', '37')
+export const getFantasyMovies = () => discoverByGenre('movie', '14')
+export const getCrimeMovies = () => discoverByGenre('movie', '80')
+export const getMusicMovies = () => discoverByGenre('movie', '10402')
+export const getHistoryMovies = () => discoverByGenre('movie', '36')
 
 // ─── More TV Shows ────────────────────────────────────────────────────────────
 
@@ -293,53 +237,18 @@ export const getOnTheAirTV = async (): Promise<Movie[]> => {
   }
 }
 
-export const getActionTV = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
-      with_genres: '10759',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
+export const getActionTV = () => discoverByGenre('tv', '10759')
+export const getComedyTV = () => discoverByGenre('tv', '35')
+export const getCrimeTV = () => discoverByGenre('tv', '80')
+export const getDocumentaryTV = () => discoverByGenre('tv', '99')
+export const getDramaTV = () => discoverByGenre('tv', '18')
+export const getMysteryTV = () => discoverByGenre('tv', '9648')
+export const getAnimationTV = () => discoverByGenre('tv', '16')
+export const getSciFiTV = () => discoverByGenre('tv', '10765')
+export const getFamilyTV = () => discoverByGenre('tv', '10751')
+export const getTalkShowTV = () => discoverByGenre('tv', '10767')
 
-export const getComedyTV = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
-      with_genres: '35',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getCrimeTV = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
-      with_genres: '80',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getDocumentaryTV = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
-      with_genres: '99',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
+// ─── Trending ──────────────────────────────────────────────────────────────────
 
 export const getTrendingMovies = async (): Promise<Movie[]> => {
   try {
@@ -356,163 +265,6 @@ export const getTrendingTV = async (): Promise<Movie[]> => {
     return data.results ?? []
   } catch {
     return []
-  }
-}
-
-export const getRomanceMovies = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
-      with_genres: '10749',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getWesternMovies = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
-      with_genres: '37',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getFantasyMovies = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
-      with_genres: '14',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getCrimeMovies = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
-      with_genres: '80',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getMusicMovies = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
-      with_genres: '10402',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getHistoryMovies = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/movie', {
-      with_genres: '36',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-// ─── More TV Shows (additional genres) ────────────────────────────────────────
-
-export const getDramaTV = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
-      with_genres: '18',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getMysteryTV = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
-      with_genres: '9648',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getAnimationTV = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
-      with_genres: '16',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getSciFiTV = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
-      with_genres: '10765',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getFamilyTV = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
-      with_genres: '10751',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-export const getTalkShowTV = async (): Promise<Movie[]> => {
-  try {
-    const data = await fetcher<{ results: Movie[] }>('/discover/tv', {
-      with_genres: '10767',
-      sort_by: 'popularity.desc',
-    })
-    return data.results ?? []
-  } catch {
-    return []
-  }
-}
-
-// ─── People ──────────────────────────────────────────────────────────────────
-
-export const getPersonDetails = async (id: number): Promise<Record<string, unknown> | null> => {
-  try {
-    const data = await fetcher<Record<string, unknown>>(`/person/${id}`)
-    return data
-  } catch {
-    return null
   }
 }
 

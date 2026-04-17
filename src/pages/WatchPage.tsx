@@ -5,6 +5,7 @@ import { ChevronLeft, Server, Monitor, RefreshCw, ChevronDown, AlertTriangle } f
 import { useMovieDetails, useTVDetails } from '../hooks/useMovies'
 import { Spinner } from '../components/ui/Spinner'
 import { rankServers, recordSuccess, recordFailure } from '../hooks/useServerRanking'
+import { useWatchProgress } from '../hooks/useWatchProgress'
 import { useSEO } from '../hooks/useSEO'
 import { getBackdropUrl, getMediaTitle } from '../lib/tmdb'
 import type { MediaDetails } from '../lib/tmdb'
@@ -146,7 +147,7 @@ export const WatchPage: React.FC = () => {
   const id        = parseInt(params.id, 10)
 
   // Sort servers by historical success score — best first
-  const rankedSources = useMemo(() => rankServers(SOURCES), [])
+  const rankedSources = rankServers(SOURCES)
 
   const [sourceId, setSourceId]         = useState(rankedSources[0].id)
   const [season, setSeason]             = useState(1)
@@ -157,9 +158,13 @@ export const WatchPage: React.FC = () => {
   const [loadError, setLoadError]       = useState(false)
   const [autoFallback, setAutoFallback] = useState(false)
   const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const fallbackAttempts = useRef(0)
 
   const { data: movieData, isLoading: movieLoading } = useMovieDetails(mediaType === 'movie' ? id : 0)
   const { data: tvData,    isLoading: tvLoading }    = useTVDetails(mediaType === 'tv' ? id : 0)
+
+  // Track watch progress for "Continue Watching"
+  const { save: saveProgress } = useWatchProgress(mediaType, id)
 
   const details: MediaDetails | null = mediaType === 'movie' ? movieData ?? null : tvData ?? null
   const isLoading  = mediaType === 'movie' ? movieLoading : tvLoading
@@ -198,11 +203,13 @@ export const WatchPage: React.FC = () => {
   useEffect(() => {
     setLoadError(false)
     setAutoFallback(false)
+    fallbackAttempts.current = 0
     if (errorTimer.current) clearTimeout(errorTimer.current)
     errorTimer.current = setTimeout(() => {
       recordFailure(sourceId)
-      const next = (currentSourceIndex + 1) % rankedSources.length
-      if (next !== 0) {
+      fallbackAttempts.current++
+      if (fallbackAttempts.current < rankedSources.length) {
+        const next = (currentSourceIndex + 1) % rankedSources.length
         setSourceId(rankedSources[next].id)
         setIframeKey((k) => k + 1)
         setAutoFallback(true)
@@ -226,7 +233,13 @@ export const WatchPage: React.FC = () => {
     setLoadError(false)
     recordSuccess(sourceId)
     if (errorTimer.current) clearTimeout(errorTimer.current)
-  }, [sourceId])
+    // Record watch progress when iframe loads successfully
+    saveProgress(0, 0, {
+      title: title || 'Unknown',
+      posterPath: details?.poster_path ?? null,
+      ...(mediaType === 'tv' && { season, episode }),
+    })
+  }, [sourceId, title, details?.poster_path, mediaType, season, episode, saveProgress])
 
   return (
     <WatchShell
