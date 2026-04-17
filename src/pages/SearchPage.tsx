@@ -7,6 +7,8 @@ import { useQuery } from '@tanstack/react-query'
 import { MovieCard } from '../components/MovieCard'
 import { Spinner } from '../components/ui/Spinner'
 import { searchAnime } from '../lib/api'
+import { safeParseSearchQuery } from '../lib/validation'
+import { captureException } from '../lib/sentry'
 import type { Movie } from '../lib/tmdb'
 import type { AnimeEntry } from '../lib/api'
 
@@ -37,12 +39,31 @@ export const SearchPage: React.FC = () => {
   // Debounce and sync to URL
   useEffect(() => {
     const t = setTimeout(() => {
-      setDebouncedQuery(query)
-      navigate({
-        to: '/search',
-        search: (prev) => ({ ...prev, q: query || undefined }),
-        replace: true,
-      })
+      // Validate search query
+      const validationResult = safeParseSearchQuery({ q: query })
+
+      if (query === '') {
+        // Allow empty query to clear search
+        setDebouncedQuery('')
+        navigate({
+          to: '/search',
+          search: (prev) => ({ ...prev, q: undefined }),
+          replace: true,
+        })
+      } else if (validationResult.success) {
+        setDebouncedQuery(validationResult.data.q)
+        navigate({
+          to: '/search',
+          search: (prev) => ({ ...prev, q: validationResult.data.q }),
+          replace: true,
+        })
+      } else {
+        // Log validation error to Sentry
+        captureException(new Error(`Invalid search query: ${query}`), {
+          component: 'SearchPage',
+          query,
+        })
+      }
     }, 400)
     return () => clearTimeout(t)
   }, [query, navigate])
@@ -71,11 +92,11 @@ export const SearchPage: React.FC = () => {
     return m.media_type === filter
   })
 
-  const normalizedAnime = animeResults.map((a: AnimeEntry) => ({
+  const normalizedAnime = animeResults.map((a: AnimeEntry): Movie => ({
     id: a.mal_id,
     title: a.title_english || a.title,
     name: a.title_english || a.title,
-    poster_path: a.images?.jpg?.large_image_url || a.images?.jpg?.image_url,
+    poster_path: a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || null,
     vote_average: a.score || 0,
     media_type: 'anime',
     overview: a.synopsis || '',
@@ -90,7 +111,7 @@ export const SearchPage: React.FC = () => {
     filter === 'anime' ? normalizedAnime :
     filter === 'all'   ? [...tmdbResults, ...normalizedAnime] :
     tmdbResults
-  ).sort((a: any, b: any) => (b.vote_average || 0) - (a.vote_average || 0))
+  ).sort((a: Movie, b: Movie) => (b.vote_average || 0) - (a.vote_average || 0))
 
   const isLoading = tmdbLoading || animeLoading
 
@@ -107,11 +128,13 @@ export const SearchPage: React.FC = () => {
               onChange={(e) => handleChange(e.target.value)}
               placeholder="Search movies, TV shows, anime..."
               autoFocus
+              aria-label="Search for movies, TV shows, or anime"
               className="w-full bg-zinc-900 border border-zinc-700 focus:border-zinc-500 text-white pl-12 pr-12 py-4 rounded-xl outline-none transition-colors text-sm"
             />
             {query && (
               <button
                 onClick={() => handleChange('')}
+                aria-label="Clear search"
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-zinc-700 rounded-full transition-colors"
               >
                 <X className="w-4 h-4 text-zinc-400" />

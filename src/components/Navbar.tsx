@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Bell, User, Menu, X } from 'lucide-react'
+import { Search, User, Menu, X } from 'lucide-react'
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -69,7 +69,7 @@ export const Navbar: React.FC = () => {
               <Link
                 key={link.to}
                 to={link.to}
-                className="text-sm text-zinc-300 hover:text-white transition-colors font-medium"
+                className="text-sm text-zinc-300 hover:text-white transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-[#E50914] rounded px-2 py-1"
               >
                 {link.label}
               </Link>
@@ -109,18 +109,15 @@ export const Navbar: React.FC = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setShowSearch(true)}
-                className="text-zinc-300 hover:text-white p-1.5 rounded-full transition-colors"
+                aria-label="Open search"
+                className="text-zinc-300 hover:text-white p-1.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#E50914]"
               >
                 <Search className="w-5 h-5" />
               </motion.button>
             )}
           </AnimatePresence>
 
-          <button className="text-zinc-300 hover:text-white p-1.5 rounded-full transition-colors hidden sm:block">
-            <Bell className="w-5 h-5" />
-          </button>
-
-          <Link to="/profile" className="hidden sm:flex items-center gap-1.5 text-zinc-300 hover:text-white transition-colors">
+          <Link to="/profile" className="hidden sm:flex items-center gap-1.5 text-zinc-300 hover:text-white transition-colors" aria-label="User Profile">
             <div className="w-8 h-8 rounded bg-[#E50914] flex items-center justify-center">
               <User className="w-4 h-4 text-white" />
             </div>
@@ -128,7 +125,9 @@ export const Navbar: React.FC = () => {
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden text-zinc-300 hover:text-white p-1.5"
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuOpen}
+            className="lg:hidden text-zinc-300 hover:text-white p-1.5 focus:outline-none focus:ring-2 focus:ring-[#E50914]"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>

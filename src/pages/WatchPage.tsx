@@ -173,7 +173,7 @@ export const WatchPage: React.FC = () => {
       const found = seasons.find((s) => s.season_number === season)
       if (found?.episode_count) return found.episode_count
     }
-    const totalEpisodes = (details as any)?.number_of_episodes ?? 50
+    const totalEpisodes = (details && 'number_of_episodes' in details) ? (details.number_of_episodes ?? 50) : 50
     return Math.max(1, Math.ceil(totalEpisodes / Math.max(totalSeasons, 1)))
   }, [details, seasons, season, totalSeasons])
 

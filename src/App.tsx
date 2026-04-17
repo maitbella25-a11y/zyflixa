@@ -7,6 +7,7 @@ import {
   Outlet,
 } from '@tanstack/react-router'
 import { Navbar } from './components/Navbar'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { HomePage } from './pages/HomePage'
 import { SearchPage } from './pages/SearchPage'
 import { DetailsPage } from './pages/DetailsPage'
@@ -15,6 +16,7 @@ import { WatchPage } from './pages/WatchPage'
 import { AnimeWatchPage } from './pages/AnimeWatchPage'
 import { BrowsePage } from './pages/BrowsePage'
 import { WatchlistPage } from './pages/WatchlistPage'
+import { WatchlistProvider } from './contexts/WatchlistContext'
 import { Link } from '@tanstack/react-router'
 
 // ── Root WITH Navbar (all normal pages) ──────────────────────────────────────
@@ -116,7 +118,13 @@ declare module '@tanstack/react-router' {
 }
 
 function App() {
-  return <RouterProvider router={router} />
+  return (
+    <ErrorBoundary>
+      <WatchlistProvider>
+        <RouterProvider router={router} />
+      </WatchlistProvider>
+    </ErrorBoundary>
+  )
 }
 
 export default App

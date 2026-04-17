@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Server, Monitor, ChevronDown } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { getAnimeById } from '../lib/api'
+import type { AnimeEntry } from '../lib/api'
 import { Spinner } from '../components/ui/Spinner'
 import { useSEO } from '../hooks/useSEO'
 import { rankServers, recordSuccess, recordFailure } from '../hooks/useServerRanking'
@@ -73,9 +74,9 @@ export const AnimeWatchPage: React.FC = () => {
     staleTime: 30 * 60 * 1000,
   })
 
-  const title         = (anime as any)?.title_english || (anime as any)?.title || ''
-  const totalEpisodes = (anime as any)?.episodes || 24
-  const poster        = (anime as any)?.images?.jpg?.large_image_url || undefined
+  const title: string = anime?.title_english || anime?.title || ''
+  const totalEpisodes: number = anime?.episodes || 24
+  const poster: string | undefined = anime?.images?.jpg?.large_image_url || undefined
 
   useSEO({
     title:       title ? `Watch ${title} — Episode ${episode}` : 'Watch Anime',
